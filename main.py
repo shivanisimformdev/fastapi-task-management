@@ -3,13 +3,21 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 from datetime import datetime
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request, Form, APIRouter
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from utils import hash_password, verify_password
 from models import UserDetails, User, UserRole, UserTechnology, Project, UserProject, TaskStatus, Task, Base
 
 
 app = FastAPI()
+
 Base.metadata.create_all(bind=engine)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+templates = Jinja2Templates(directory="templates")
 
 
 class UserCreate(BaseModel):
@@ -141,39 +149,52 @@ def get_user_by_email_and_password(email: str, password: str, db: Session):
         raise HTTPException(status_code=404, detail="User not found or invalid credentials")
     return user
 
+@app.get("/home/")
+def home(request: Request, response_class=HTMLResponse):
+    return templates.TemplateResponse(name="home.html", context={"request":request})
 
-@app.post("/users/")
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = User(username=user.username, email=user.email)
-    db_user.password_hash = hash_password(user.password)  # You would need to implement hash_password function
+@app.get("/register/")
+def register_user(request: Request, response_class=HTMLResponse):
+    return templates.TemplateResponse(name="register.html", context={"request":request}
+    )
+
+@app.post("/user/")
+def create_user(request: Request, username: str = Form(...), password: str = Form(...), email: str = Form(...), db: Session = Depends(get_db)):
+    db_user = User(username=username, email=email)
+    db_user.password_hash = hash_password(password)  # You would need to implement hash_password function
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return db_user
+    return templates.TemplateResponse("login.html", {"request": request, "username": username})
 
+@app.post("/users/login")
+def login_user(request: Request, email: str =  Form(...),password: str = Form(...), db: Session = Depends(get_db)):
+    user = get_user_by_email_and_password(email, password, db)
+    return templates.TemplateResponse("home.html", {"request": request, "username": username})
 
-@app.get("/users/login")
-def login_user(user: GetUser, db: Session = Depends(get_db)):
-    user = get_user_by_email_and_password(user.email, user.password, db)
-    return user
+@app.get("/roles/", response_class=HTMLResponse)
+def render_role_template(request: Request):
+    return templates.TemplateResponse("role.html", {"request": request})
 
-
-@app.post("/user_roles/")
-def create_user_role(user_role: UserRoleCreate, db: Session = Depends(get_db)):
-    new_user_role = UserRole(**user_role.dict())
+@app.post("/user_roles/", response_class=HTMLResponse)
+def create_user_role(request: Request, role_name: str = Form(...), db: Session = Depends(get_db)):
+    new_user_role = UserRole(role_name=role_name)
     db.add(new_user_role)
     db.commit()
     db.refresh(new_user_role)
-    return new_user_role
+    return templates.TemplateResponse("home.html", {"request": request, "message": "Role added successfully"})
 
+@app.get("/technology/", response_class=HTMLResponse)
+def render_technology_template(request: Request):
+    return templates.TemplateResponse("technology.html", {"request": request})
 
-@app.post("/user_technologies/")
-def create_user_technology(user_technology: UserTechnologyCreate, db: Session = Depends(get_db)):
-    new_user_technology = UserTechnology(**user_technology.dict())
-    db.add(new_user_technology)
+@app.post("/user_technologies/", response_class=HTMLResponse)
+def create_user_technology(technology_name: str = Form(...), db: Session = Depends(get_db)):
+    # new_user_technology = UserTechnology(**user_technology.dict())
+    db.add(technology_name)
     db.commit()
     db.refresh(new_user_technology)
-    return new_user_technology
+    return templates.TemplateResponse("home.html", {"request": request})
 
 
 @app.post("/user_details/")
@@ -195,66 +216,79 @@ def create_user_details(user_details: UserDetailsCreate, db: Session = Depends(g
 
     return new_user_detail
 
+@app.get("/users/", response_class=HTMLResponse)
+def get_users(request: Request, db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    return templates.TemplateResponse("list_users.html", {"request": request, "users":users})
+
 
 @app.get("/user_details/{user_id}", response_model=UserDetailResponse)
-def get_user_details(user_id: int, db: Session = Depends(get_db)):
+def get_user_details(request: Request, user_id: int, db: Session = Depends(get_db)):
     user_detail = db.query(UserDetails).filter(UserDetails.user_id == user_id).first()
     if not user_detail:
         raise HTTPException(status_code=404, detail="User details not found")
     user_role = db.query(UserRole).filter(UserRole.user_role_id == user_detail.user_role_id).first()
     user_technology = db.query(UserTechnology).filter(UserTechnology.user_technology_id == user_detail.user_technology_id).first()
-    return {
-        "id": user_detail.id,
-        "created_at": user_detail.created_at,
-        "role_name": user_role.role_name,
-        "technology_name": user_technology.technology_name
-    }
+    # return {
+    #     "id": user_detail.id,
+    #     "created_at": user_detail.created_at,
+    #     "role_name": user_role.role_name,
+    #     "technology_name": user_technology.technology_name
+    # }
+    return templates.TemplateResponse("user_details.html", {"request": request, "user":user_detail})
 
+@app.get("/project/")
+def render_project_template(request: Request):
+    return templates.TemplateResponse("project.html", {"request": request})
 
 @app.post("/projects/")
-def create_project(project: ProjectCreate, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == project.created_by_id).first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    new_project = Project(**project.dict())
+def create_project(request: Request, project_name: str = Form(...), project_description: str = Form(...),  db: Session = Depends(get_db)):
+    # user = db.query(User).filter(User.id == project.created_by_id).first()
+    # if not user:
+    #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    new_project = Project(project_name=project_name, project_description=project_description)
     db.add(new_project)
     db.commit()
     db.refresh(new_project)
-    return new_project
+    return templates.TemplateResponse("home.html", {"request": request})
 
 
-@app.get("/projects/user/{user_id}")
-def get_projects_created_by_user(user_id: int, db: Session = Depends(get_db)):
+@app.get("/projects/user/{user_id}", response_class=HTMLResponse)
+def get_projects_created_by_user(request: Request, user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     projects = db.query(Project).filter(Project.created_by_id == user_id).all()
+    return templates.TemplateResponse("list_projects.html", {"request": request, "projects":projects})
 
-    return projects
 
+@app.get("/user/project/{user_id}/", response_class=HTMLResponse)
+def render_assign_project_template(request: Request, user_id: int, db: Session = Depends(get_db)):
+    projects = db.query(Project).all()
+    return templates.TemplateResponse("assign_project.html", context={"request":request, "projects":projects, "user_id": user_id})
 
-@app.post("/user_projects/")
-def create_user_project(user_project: UserProjectCreate, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_project.user_id).first()
+@app.post("/user_projects/{user_id}/", response_class=HTMLResponse)
+def create_user_project(request: Request, user_id: int, project_id: int = Form(...), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    project = db.query(Project).filter(Project.project_id == user_project.project_id).first()
+    project = db.query(Project).filter(Project.project_id == project_id).first()
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
     new_user_project = UserProject(
-        user_id=user_project.user_id,
-        project_id=user_project.project_id,
+        user_id=user_id,
+        project_id=project_id,
         joined_at=datetime.utcnow()
     )
     db.add(new_user_project)
     db.commit()
     db.refresh(new_user_project)
-    return new_user_project
+    return templates.TemplateResponse("home.html", context={"request":request})
 
 
-@app.get("/user_projects/{user_id}/projects")
-def get_user_projects(user_id: int, db: Session = Depends(get_db)):
+@app.get("/user_projects/{user_id}", response_class=HTMLResponse)
+def get_user_projects(request: Request, user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -274,20 +308,26 @@ def get_user_projects(user_id: int, db: Session = Depends(get_db)):
         )
         project_responses.append(project_response)
 
-    return project_responses
+    return templates.TemplateResponse("list_user_projects.html", context={"request": request, "projects":project_responses})
 
+@app.get("/task/status/")
+def render_task_status_template(request: Request):
+    return templates.TemplateResponse("task_status.html", context={"request": request})
 
 @app.post("/task_statuses/")
-def create_task_status(task_status: TaskStatusCreate, db: Session = Depends(get_db)):
-    new_task_status = TaskStatus(**task_status.dict())
-    db.add(new_task_status)
+def create_task_status(request: Request, task_status: str = Form(...), db: Session = Depends(get_db)):
+    # new_task_status = TaskStatus(**task_status.dict())
+    db.add(task_status)
     db.commit()
     db.refresh(new_task_status)
-    return new_task_status
+    return templates.TemplateResponse("home.html", context={"request": request})
 
+@app.get("/task/")
+def render_task_template(request: Request):
+    return templates.TemplateResponse("add_task.html", context={"request": request})
 
 @app.post("/tasks/")
-def create_task(task: TaskCreate, db: Session = Depends(get_db)):
+def create_task(request: Request, name: str = Form(...), description: str = Form(...), db: Session = Depends(get_db)):
     project = db.query(Project).filter(Project.project_id == task.project_id).first()
     if not project:
         raise HTTPException(
@@ -313,11 +353,11 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_task)
 
-    return new_task
+    return templates.TemplateResponse("home.html", context={"request": request})
 
 
-@app.get("/tasks/{task_id}", response_model=TaskDetail)
-def get_task_details(task_id: int, db: Session = Depends(get_db)):
+@app.get("/tasks/{task_id}", response_class=HTMLResponse)
+def get_task_details(request: Request, task_id: int, db: Session = Depends(get_db)):
     task = db.query(Task).filter(Task.task_id == task_id).first()
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
@@ -332,4 +372,9 @@ def get_task_details(task_id: int, db: Session = Depends(get_db)):
         project_description=project.project_description,
         status_name=status_name
     )
-    return task_detail
+    return templates.TemplateResponse("task_detail.html", context={"request":request, "task_detail":task_detail})
+
+
+@app.get("/logout/")
+def logout(request: Request):
+    return templates.TemplateResponse("login.html", context={"request":request})

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block main %}
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+      <h1 class="h2">Task</h1>
+      <div class="btn-toolbar mb-2 mb-md-0">
+      </div>
+    </div>
+    <form method="post" action="{{url_for('create_task')}}" style="width: 1000px;">
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="Name" aria-label="task_name" aria-describedby="basic-addon1" required>
+        </div>
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="Description" aria-label="description" name="task_description" aria-describedby="basic-addon1">
+        </div>
+        <button class="btn btn-primary" type="button" style="width: 100px;">Submit</button>
+    </form>
+</main>
+{% endblock main %}
