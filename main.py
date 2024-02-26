@@ -189,9 +189,9 @@ def render_technology_template(request: Request):
     return templates.TemplateResponse("technology.html", {"request": request})
 
 @app.post("/user_technologies/", response_class=HTMLResponse)
-def create_user_technology(technology_name: str = Form(...), db: Session = Depends(get_db)):
-    # new_user_technology = UserTechnology(**user_technology.dict())
-    db.add(technology_name)
+def create_user_technology(request: Request, technology_name: str = Form(...), db: Session = Depends(get_db)):
+    new_user_technology = UserTechnology(technology_name=technology_name)
+    db.add(new_user_technology)
     db.commit()
     db.refresh(new_user_technology)
     return templates.TemplateResponse("home.html", {"request": request})
@@ -246,7 +246,7 @@ def create_project(request: Request, project_name: str = Form(...), project_desc
     # user = db.query(User).filter(User.id == project.created_by_id).first()
     # if not user:
     #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    new_project = Project(project_name=project_name, project_description=project_description)
+    new_project = Project(project_name=project_name, project_description=project_description, created_by_id=1)
     db.add(new_project)
     db.commit()
     db.refresh(new_project)
@@ -327,7 +327,7 @@ def render_task_template(request: Request):
     return templates.TemplateResponse("add_task.html", context={"request": request})
 
 @app.post("/tasks/")
-def create_task(request: Request, name: str = Form(...), description: str = Form(...), db: Session = Depends(get_db)):
+def create_task(request: Request, task_name: str = Form(...), task_description: str = Form(...), db: Session = Depends(get_db)):
     project = db.query(Project).filter(Project.project_id == task.project_id).first()
     if not project:
         raise HTTPException(

@@ -9,12 +9,12 @@
     </div>
     <form method="post" action="{{url_for('create_task')}}" style="width: 1000px;">
         <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="Name" aria-label="task_name" aria-describedby="basic-addon1" required>
+            <input type="text" class="form-control" placeholder="Name" aria-label="task_name" name="task_name" aria-describedby="basic-addon1" required>
         </div>
         <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="Description" aria-label="description" name="task_description" aria-describedby="basic-addon1">
+            <textarea class="form-control" aria-label="description" placeholder="Description" name="task_description" required></textarea>
         </div>
-        <button class="btn btn-primary" type="button" style="width: 100px;">Submit</button>
+        <button class="btn btn-primary" type="submit" style="width: 100px;">Submit</button>
     </form>
 </main>
 {% endblock main %}
