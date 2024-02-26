@@ -7,7 +7,7 @@
       <div class="btn-toolbar mb-2 mb-md-0">
       </div>
     </div>
-    <form method="post" action="{{url_for('create_task')}}" style="width: 1000px;">
+    <form method="post" action="{{url_for('create_task',  user_id=user_id,  project_id=project_id)}}" style="width: 1000px;">
         <div class="input-group mb-3">
             <input type="text" class="form-control" placeholder="Name" aria-label="task_name" name="task_name" aria-describedby="basic-addon1" required>
         </div>

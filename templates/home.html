@@ -7,11 +7,15 @@
         </div>
       </div>
       {% if message %}
-      <div aria-live="polite" aria-atomic="true" class="bg-body-secondary position-relative bd-example-toasts rounded-3">
+      sdfdjsfbj
+      <div aria-live="assertive" aria-atomic="true" class="bg-body-secondary position-relative bd-example-toasts rounded-3" 
+      style="width:100px;height:100px;"
+      data-bs-autohide="false">
         <div class="toast-container p-3" id="toastPlacement">
           <div class="toast">
             <div class="toast-header">
               <strong class="me-auto">Success</strong>
+              <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
             <div class="toast-body">
               {{message}}
@@ -45,9 +49,21 @@
         </div>
         <div class="card" style="width: 18rem;height: 100px;margin-right:50px;">
           <div class="card-body">
-            <h5 class="card-title"><a href="{{ url_for('render_task_template') }}" class="card-link">Tasks</a></h5>
+            <h5 class="card-title"><a href="" class="card-link">Tasks</a></h5>
           </div>
         </div>
       </div>
     </main>
 {% endblock main %}
+
+{% block javascript %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{{ url_for('static', path='assets/js/bootstrap.bundle.min.js') }}"></script>
+<script type="text/javascript">
+const toastLiveExample = document.getElementById('toastPlacement')
+console.log('dfsdfsdffsf', toastLiveExample)
+const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastLiveExample)
+toastBootstrap.show()
+</script>
+{% endblock javascript %}
+

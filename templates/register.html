@@ -105,8 +105,8 @@
 
   <header class="navbar sticky-top bg-dark flex-md-nowrap p-0 shadow" data-bs-theme="dark">
     <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6 text-white" href="#">Simform</a>
-   </header>
-    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+  </header>
+  <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 class="h2">Task Management Application</h1>
             <div class="btn-toolbar mb-2 mb-md-0">
@@ -122,14 +122,27 @@
                 <input type="text" class="form-control" placeholder="Username" aria-label="Username" name="username" aria-describedby="basic-addon1" required>
             </div>
             <div class="input-group mb-3">
-                <input type="text" class="form-control" placeholder="Email" aria-label="Email" name="email" aria-describedby="basic-addon1" required>
+                <input type="email" class="form-control" placeholder="Email" aria-label="Email" name="email" aria-describedby="basic-addon1" required>
             </div>
             <div class="input-group mb-3">
-                <input type="password" class="form-control" placeholder="Password" aria-label="Password" name="password" aria-describedby="basic-addon1" required>
+                <input type="password" class="form-control" placeholder="Password" aria-label="Password" name="password" id="password" aria-describedby="basic-addon1" required>
             </div>
             <div class="input-group mb-3">
-                <input type="password" class="form-control" placeholder="Confirm Password" aria-label="Confirm Password" aria-describedby="basic-addon1" required>
+                <input type="password" class="form-control" placeholder="Confirm Password" aria-label="Confirm Password" id="confirm_password" aria-describedby="basic-addon1" required>
             </div>
-            <button class="btn btn-primary" type="submit" style="width: 100px;">Submit</button>
+            <button class="btn btn-primary" type="submit" style="width: 100px;" id="submit">Submit</button>
         </form>
-    </main>
+  </main>
+</html>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $("#confirm_password").change(function() {
+    var password = $("#password").val();
+    var confirmPassword = $("#confirm_password").val();
+    if (password !== confirmPassword) {
+       alert("Passwords did not match.")
+    }
+    })
+  });
+</script>
