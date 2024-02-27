@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse
 from utils import hash_password, verify_password
 from models import UserDetails, User, UserRole, UserTechnology, Project, UserProject, TaskStatus, Task
 from database import Base
+import logging
 
 
 
@@ -21,13 +22,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-templates = Jinja2Templates(directory="templates")
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-templates = Jinja2Templates(directory="templates")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
