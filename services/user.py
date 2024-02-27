@@ -51,12 +51,12 @@ def create_user_role(user_role: UserRoleCreate, db: Session = None):
     if db is None:
         db = SessionLocal()
     logger.info("Creating a new user role with name: %s", user_role.role_name)
-    new_user_role = UserRole(**user_role.dict())
+    new_user_role = UserRole(role_name=role_name)
     db.add(new_user_role)
     db.commit()
     db.refresh(new_user_role)
     logger.info("User role created successfully with ID: %d", new_user_role.user_role_id)
-    return new_user_role
+    return
 
 
 def create_user_technology(user_technology: UserTechnologyCreate, db: Session = None):
@@ -66,7 +66,7 @@ def create_user_technology(user_technology: UserTechnologyCreate, db: Session = 
     if db is None:
         db = SessionLocal()
     logger.info("Creating a new user technology with name: %s", user_technology.technology_name)
-    new_user_technology = UserTechnology(**user_technology.dict())
+    new_user_technology = UserTechnology(technology_name=technology_name)
     db.add(new_user_technology)
     db.commit()
     db.refresh(new_user_technology)
