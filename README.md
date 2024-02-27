@@ -4,6 +4,10 @@ Task Management Application
 Clone the repository:
     `git clone git@github.com:shivanisimformdev/fastapi-task-management.git`
 
+### Python Version
+```
+Python 3.10
+```
 ### Installation
 
 You can install the required packages using pip:
