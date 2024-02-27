@@ -7,21 +7,9 @@
         </div>
       </div>
       {% if message %}
-      sdfdjsfbj
-      <div aria-live="assertive" aria-atomic="true" class="bg-body-secondary position-relative bd-example-toasts rounded-3" 
-      style="width:100px;height:100px;"
-      data-bs-autohide="false">
-        <div class="toast-container p-3" id="toastPlacement">
-          <div class="toast">
-            <div class="toast-header">
-              <strong class="me-auto">Success</strong>
-              <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body">
-              {{message}}
-            </div>
-          </div>
-        </div>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       {% endif %}
 
@@ -55,15 +43,6 @@
       </div>
     </main>
 {% endblock main %}
-
 {% block javascript %}
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="{{ url_for('static', path='assets/js/bootstrap.bundle.min.js') }}"></script>
-<script type="text/javascript">
-const toastLiveExample = document.getElementById('toastPlacement')
-console.log('dfsdfsdffsf', toastLiveExample)
-const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastLiveExample)
-toastBootstrap.show()
-</script>
 {% endblock javascript %}
 

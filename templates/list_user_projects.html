@@ -22,8 +22,8 @@
           <th scope="row">{{ loop.index }}</th>
           <td>{{ project.project_name }}</td>
           <td>{{ project.project_description }}</td>
-          <td><a href="{{ url_for('get_tasks_for_project', user_id=user_id, project_id=project.project_id) }}"><i class="bi bi-list-stars"></i>
-          <a href="{{ url_for('render_task_template', user_id=user_id,   project_id=project.project_id) }}"><i class="bi bi-list-stars"></i></td>
+          <td><a href="{{ url_for('get_tasks_for_project', user_id=user_id, project_id=project.project_id) }}"><i class="bi bi-list-stars"></i></a>
+          <a href="{{ url_for('render_task_template', user_id=user_id,   project_id=project.project_id) }}"><i class="bi bi-card-checklist"></i></a></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -31,3 +31,5 @@
 </main>
 
 {% endblock main %}
+{% block javascript %}
+{% endblock javascript %}

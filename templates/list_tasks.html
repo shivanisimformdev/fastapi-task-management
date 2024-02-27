@@ -23,7 +23,7 @@
           <th scope="row">{{ loop.index }}</th>
           <td>{{ task.task_name }}</td>
           <td>{{ task.task_description }}</td>
-          <td><a href="{{ url_for('get_task_details', task_id=task.task_id) }}"><i class="bi bi-eye"></i></td>
+          <td><a href="{{ url_for('get_task_details', task_id=task.task_id) }}"><i class="bi bi-eye"></i></a></td>
 
         </tr>
         {% endfor %}
@@ -32,3 +32,5 @@
 </main>
 
 {% endblock main %}
+{% block javascript %}
+{% endblock javascript %}

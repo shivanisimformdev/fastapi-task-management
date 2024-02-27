@@ -24,9 +24,9 @@
           <th scope="row">{{ loop.index }}</th>
           <td>{{ user.username }}</td>
           <td>{{ user.email }}</td>
-          <td><a href="{{ url_for('get_user_details', user_id=user.id) }}"><i class="bi bi-eye"></i>
-          <a href="{{ url_for('get_user_projects', user_id=user.id) }}"><i class="bi bi-clipboard2-check"></i>
-          <a href="{{ url_for('render_assign_project_template', user_id=user.id) }}"><i class="bi bi-layout-text-sidebar-reverse"></i></i></td>
+          <td><a href="{{ url_for('get_user_details', user_id=user.id) }}"><i class="bi bi-eye"></i></a>
+          <a href="{{ url_for('get_user_projects', user_id=user.id) }}"><i class="bi bi-clipboard2-check"></i></a>
+          <a href="{{ url_for('render_assign_project_template', user_id=user.id) }}"><i class="bi bi-layout-text-sidebar-reverse"></i></a></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -34,3 +34,5 @@
 </main>
 
 {% endblock main %}
+{% block javascript %}
+{% endblock javascript %}

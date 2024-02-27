@@ -181,7 +181,8 @@ def register_user(request: Request, response_class=HTMLResponse):
     )
 
 @app.post("/user/")
-def create_user(request: Request, username: str = Form(...), password: str = Form(...), email: str = Form(...), db: Session = Depends(get_db)):
+def create_user(request: Request, username: str = Form(...), password: str = Form(...), email: str = Form(...), 
+    role_name : str = Form(...), technology_name : str = Form(...), db: Session = Depends(get_db)):
     """
         Creates a new user with the provided user details in the database.
 
@@ -193,13 +194,13 @@ def create_user(request: Request, username: str = Form(...), password: str = For
     db.commit()
     db.refresh(db_user)
     logger.info("User created successfully with ID: %d", db_user.id)
-    return templates.TemplateResponse("login.html", {"request": request, "username": username})
+    return templates.TemplateResponse("login.html", {"request": request, "username": username, "message":"User registered succsessfully"})
 
 
 @app.post("/users/login")
 def login_user(request: Request, email: str =  Form(...),password: str = Form(...), db: Session = Depends(get_db)):
     user = get_user_by_email_and_password(email, password, db)
-    return templates.TemplateResponse("home.html", {"request": request, "username": user.username})
+    return templates.TemplateResponse("home.html", {"request": request, "username": user.username, "message": "User Logged in successfully"})
 
 @app.get("/roles/", response_class=HTMLResponse)
 def render_role_template(request: Request):
@@ -224,21 +225,21 @@ def render_technology_template(request: Request):
     return templates.TemplateResponse("technology.html", {"request": request})
 
 @app.post("/user_technologies/", response_class=HTMLResponse)
-def create_user_technology(technology_name: str, db: Session = Depends(get_db)):
+def create_user_technology(request: Request, technology_name: str = Form(...), db: Session = Depends(get_db)):
     """
     Creates a new user technology with the provided technology details in the database.
 
     """
-    logger.info("Creating a new user technology with name: %s", user_technology.technology_name)
+    logger.info("Creating a new user technology with name: %s", technology_name)
     new_user_technology = UserTechnology(technology_name=technology_name)
     db.add(new_user_technology)
     db.commit()
     db.refresh(new_user_technology)
     logger.info("User technology created successfully with ID: %d", new_user_technology.user_technology_id)
-    return templates.TemplateResponse("home.html", {"request": request})
+    return templates.TemplateResponse("home.html", {"request": request, "message": "Technology added successfully"})
 
-@app.post("/user_details/")
-def create_user_details(user_details: UserDetailsCreate, db: Session = Depends(get_db)):
+@app.post("/user/details/{user_id}/")
+def create_user_details(request: Request, user_id: int, user_role_id: str = Form(...), user_technology_id: str = Form(...), db: Session = Depends(get_db)):
     """
     Creates a new user detail entry with the provided user details in the database.
 
@@ -252,27 +253,32 @@ def create_user_details(user_details: UserDetailsCreate, db: Session = Depends(g
         HTTPException: If user, user role, or user technology not found.
 
     """
-    logger.info("Creating a new user detail entry with user_id: %d", user_details.user_id)
-    user = db.query(User).filter(User.id == user_details.user_id).first()
+    logger.info("Creating a new user detail entry with user_id: %d", user_id)
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        logger.error("User not found with ID: %d", user_details.user_id)
+        logger.error("User not found with ID: %d", user_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    user_role = db.query(UserRole).filter(UserRole.user_role_id == user_details.user_role_id).first()
+    user_role = db.query(UserRole).filter(UserRole.user_role_id == user_role_id).first()
     if not user_role:
-        logger.error("User role not found with ID: %d", user_details.user_role_id)
+        logger.error("User role not found with ID: %d", user_role_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User role not found")
-    user_technology = db.query(UserTechnology).filter(UserTechnology.user_technology_id == user_details.user_technology_id).first()
+    user_technology = db.query(UserTechnology).filter(UserTechnology.user_technology_id == user_technology_id).first()
     if not user_technology:
-        logger.error("User technology not found with ID: %d", user_details.user_technology_id)
+        logger.error("User technology not found with ID: %d", user_technology_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User technology not found")
-    new_user_detail = UserDetails(**user_details.dict())
+    new_user_detail = UserDetails(user_id=user_id, user_role_id=user_role_id, user_technology_id=user_technology_id)
 
     db.add(new_user_detail)
     db.commit()
     db.refresh(new_user_detail)
-
     logger.info("User detail entry created successfully with ID: %d", new_user_detail.id)
-    return new_user_detail
+    user_detail = db.query(UserDetails, UserRole.role_name, UserTechnology.technology_name).join(UserRole, 
+    UserDetails.user_role_id == UserRole.user_role_id).join(UserTechnology, 
+    UserDetails.user_technology_id == UserTechnology.user_technology_id).filter(UserDetails.user_id == user_id).first()
+    return templates.TemplateResponse("user_details.html", {"request": request, "user": user, "user_role":user_detail[1], 
+    "user_technology": user_detail[2],
+    "roles": db.query(UserRole).order_by(UserRole.role_name).all(),
+    "technologies": db.query(UserTechnology).order_by(UserTechnology.technology_name).all()})
 
 @app.get("/users/", response_class=HTMLResponse)
 def get_users(request: Request, db: Session = Depends(get_db)):
@@ -280,33 +286,39 @@ def get_users(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("list_users.html", {"request": request, "users":users})
 
 
-@app.get("/user_details/{user_id}", response_model=UserDetailResponse)
+@app.get("/user/details/{user_id}/", response_class=HTMLResponse)
 def get_user_details(request: Request, user_id: int, db: Session = Depends(get_db)):
     """
     Retrieves user details for the specified user ID.
     """
     # user_detail = db.query(UserDetails).filter(UserDetails.user_id == user_id).first()
     logger.info("Retrieving user details for user ID: %d", user_id)
-    user_detail = db.query(UserDetails).get(user_id)
-    if not user_detail:
-        logger.error("User details not found for user ID: %d", user_id)
-        raise HTTPException(status_code=404, detail="User details not found")
-    user_role = db.query(UserRole).filter(UserRole.user_role_id == user_detail.user_role_id).first()
-    user_technology = db.query(UserTechnology).filter(UserTechnology.user_technology_id == user_detail.user_technology_id).first()
-    logger.info("User details retrieved successfully for user ID: %d", user_id)
-    # return {
+    # user_detail = db.query(UserDetails).filter(User.id == user_id).first()
+    # if not user_detail:
+    #     logger.error("User details not found for user ID: %d", user_id)
+    #     raise HTTPException(status_code=404, detail="User details not found")
+    # user_role = db.query(UserRole).filter(UserRole.user_role_id == user_detail.user_role_id).first()
+    # user_technology = db.query(UserTechnology).filter(UserTechnology.user_technology_id == user_detail.user_technology_id).first()
+    # user_detail = {
     #     "id": user_detail.id,
-    #     "created_at": user_detail.created_at,
     #     "role_name": user_role.role_name,
     #     "technology_name": user_technology.technology_name
     # }
-    return templates.TemplateResponse("user_details.html", {"request": request, "user":user_detail})
+    user = db.query(User).filter(User.id == user_id).first()
+    user_detail = db.query(UserDetails, UserRole.role_name, UserTechnology.technology_name).join(UserRole, 
+    UserDetails.user_role_id == UserRole.user_role_id).join(UserTechnology, 
+    UserDetails.user_technology_id == UserTechnology.user_technology_id).filter(UserDetails.user_id == user_id).first()
+    logger.info("User details retrieved successfully for user ID: %d", user_id)
+    return templates.TemplateResponse("user_details.html", {"request": request, "user": user, "user_role":user_detail[1], 
+    "user_technology": user_detail[2],
+    "roles": db.query(UserRole).order_by(UserRole.role_name).all(),
+    "technologies": db.query(UserTechnology).order_by(UserTechnology.technology_name).all()})
 
-@app.get("/project/")
+@app.get("/project/", response_class=HTMLResponse)
 def render_project_template(request: Request):
     return templates.TemplateResponse("project.html", {"request": request})
 
-@app.post("/projects/")
+@app.post("/projects/", response_class=HTMLResponse)
 def create_project(request: Request, project_name: str = Form(...), project_description: str = Form(...),  db: Session = Depends(get_db)):
     """
         Creates a new project with the provided details.
@@ -322,7 +334,7 @@ def create_project(request: Request, project_name: str = Form(...), project_desc
     db.commit()
     db.refresh(new_project)
     logger.info("New project created successfully")
-    return templates.TemplateResponse("home.html", {"request": request})
+    return templates.TemplateResponse("home.html", {"request": request, "message":"Project added successfully"})
 
 
 @app.get("/projects/user/{user_id}", response_class=HTMLResponse)
@@ -363,7 +375,7 @@ def create_user_project(request: Request, user_id: int, project_id: int = Form(.
     """
     # user = db.query(User).filter(User.id == user_id).first()
     logger.info(f"Creating user project relationship for user ID: {user_id} and project ID: {project_id}")
-    user = db.query(User).get(user_id)
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
         logger.error(f"User with ID {user_id} not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -382,7 +394,7 @@ def create_user_project(request: Request, user_id: int, project_id: int = Form(.
     db.commit()
     db.refresh(new_user_project)
     logger.info("User project relationship created successfully")
-    return templates.TemplateResponse("home.html", context={"request":request})
+    return templates.TemplateResponse("home.html", context={"request":request, "message":"Project assigned successfully"})
 
 
 @app.get("/user_projects/{user_id}/projects", response_class=HTMLResponse)
@@ -419,7 +431,7 @@ def get_user_projects(request: Request, user_id: int, db: Session = Depends(get_
             project_description=project.project_description,
             created_at=project.created_at,
             updated_at=project.updated_at,
-            created_by_id=project.created_by_id
+            created_by_id=1
         )
         project_responses.append(project_response)
 
@@ -427,7 +439,7 @@ def get_user_projects(request: Request, user_id: int, db: Session = Depends(get_
     return templates.TemplateResponse("list_user_projects.html", context={"request": request, "projects":project_responses, "user_id": user_id})
 
 @app.get("/task/status/")
-def render_task_status_template(request: Request):
+def render_task_status_template(request: Request, response_class=HTMLResponse):
     return templates.TemplateResponse("task_status.html", context={"request": request})
 
 @app.post("/task_statuses/")
@@ -442,11 +454,11 @@ def create_task_status(request: Request, task_status: str = Form(...), db: Sessi
     db.refresh(new_task_status)
     return templates.TemplateResponse("home.html", context={"request": request})
 
-@app.get("/user_projects/{user_id}/projects/task/{project_id}")
+@app.get("/user_projects/{user_id}/projects/task/{project_id}", response_class=HTMLResponse)
 def render_task_template(request: Request, user_id: int, project_id: int):
     return templates.TemplateResponse("add_task.html", context={"request": request, "user_id": user_id, "project_id": project_id})
 
-@app.post("/user_projects/{user_id}/projects/task/{project_id}")
+@app.post("/user_projects/{user_id}/projects/task/{project_id}", response_class=HTMLResponse)
 def create_task(request: Request, user_id: int, project_id: int, task_name: str = Form(...), task_description: str = Form(...), db: Session = Depends(get_db)):
     """
     Creates a new task with the provided details.
@@ -492,7 +504,7 @@ def create_task(request: Request, user_id: int, project_id: int, task_name: str 
     db.refresh(new_task)
 
     logger.info("Task created successfully")
-    return templates.TemplateResponse("home.html", context={"request": request})
+    return templates.TemplateResponse("home.html", context={"request": request, "message":"Task added successfully"})
 
 
 @app.get("/tasks/{task_id}", response_class=HTMLResponse)
@@ -606,6 +618,6 @@ def get_task_with_project_details(task_id: int, db: Session = Depends(get_db)):
     return templates.TemplateResponse("task_detail.html", context={"request":request, "task_detail":task_detail})
 
 
-@app.get("/logout/")
+@app.get("/logout/", response_class=HTMLResponse)
 def logout(request: Request):
-    return templates.TemplateResponse("login.html", context={"request":request})
+    return templates.TemplateResponse("login.html", context={"request":request, "message":"User logged out successfully"})
