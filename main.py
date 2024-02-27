@@ -1,10 +1,16 @@
-from typing import List
+from typing import List, Optional
+from uuid import uuid4
+
+from fastapi.security import OAuth2PasswordRequestForm
+from jose import jwt
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy.testing import db
+
 from database import SessionLocal, engine
 from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException, status
-from utils import hash_password, verify_password
+from utils import hash_password, verify_password, create_access_token, SECRET_KEY, ALGORITHM, oauth2_scheme
 from models import UserDetails, User, UserRole, UserTechnology, Project, UserProject, TaskStatus, Task, Base
 
 
@@ -142,20 +148,27 @@ def get_user_by_email_and_password(email: str, password: str, db: Session):
     return user
 
 
-@app.post("/users/")
+@app.post('/signup/')
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = User(username=user.username, email=user.email)
-    db_user.password_hash = hash_password(user.password)  # You would need to implement hash_password function
+    db_user.password_hash = hash_password(user.password) # You would need to implement hash_password function
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return db_user
+    access_token = create_access_token(subject=db_user.email)
+    return {"user": db_user, "access_token": access_token}
 
 
-@app.get("/users/login")
+
+@app.post("/users/login")
 def login_user(user: GetUser, db: Session = Depends(get_db)):
     user = get_user_by_email_and_password(user.email, user.password, db)
-    return user
+    access_token = create_access_token(subject=user.email)
+    return {"user": user, "access_token": access_token}
+
+@app.get('/users')
+def get_all_users(db: Session = Depends(get_db)):
+    return db.query(User).all()
 
 
 @app.post("/user_roles/")
@@ -333,3 +346,5 @@ def get_task_details(task_id: int, db: Session = Depends(get_db)):
         status_name=status_name
     )
     return task_detail
+
+

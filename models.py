@@ -13,6 +13,7 @@ class User(Base):
     password_hash = Column(String)
 
 
+
 class UserTechnology(Base):
     __tablename__ = "user_technologies"
     user_technology_id = Column(Integer, primary_key=True, index=True)
