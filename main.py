@@ -9,7 +9,6 @@ from fastapi.responses import HTMLResponse
 from utils import hash_password, verify_password
 from models import UserDetails, User, UserRole, UserTechnology, Project, UserProject, TaskStatus, Task
 from database import Base
-import logging
 
 
 
@@ -181,7 +180,7 @@ def register_user(request: Request, response_class=HTMLResponse):
     )
 
 @app.post("/user/")
-def create_user(request: Request, username: str = Form(...), password: str = Form(...), email: str = Form(...), 
+def create_user(request: Request, username: str = Form(...), password: str = Form(...), email: str = Form(...),
     role_name : str = Form(...), technology_name : str = Form(...), db: Session = Depends(get_db)):
     """
         Creates a new user with the provided user details in the database.
@@ -238,7 +237,7 @@ def create_user_technology(request: Request, technology_name: str = Form(...), d
     logger.info("User technology created successfully with ID: %d", new_user_technology.user_technology_id)
     return templates.TemplateResponse("home.html", {"request": request, "message": "Technology added successfully"})
 
-@app.post("/user/details/{user_id}/")
+@app.post("/user/details/{user_id}/", response_class=HTMLResponse)
 def create_user_details(request: Request, user_id: int, user_role_id: str = Form(...), user_technology_id: str = Form(...), db: Session = Depends(get_db)):
     """
     Creates a new user detail entry with the provided user details in the database.
@@ -272,10 +271,10 @@ def create_user_details(request: Request, user_id: int, user_role_id: str = Form
     db.commit()
     db.refresh(new_user_detail)
     logger.info("User detail entry created successfully with ID: %d", new_user_detail.id)
-    user_detail = db.query(UserDetails, UserRole.role_name, UserTechnology.technology_name).join(UserRole, 
-    UserDetails.user_role_id == UserRole.user_role_id).join(UserTechnology, 
+    user_detail = db.query(UserDetails, UserRole.role_name, UserTechnology.technology_name).join(UserRole,
+    UserDetails.user_role_id == UserRole.user_role_id).join(UserTechnology,
     UserDetails.user_technology_id == UserTechnology.user_technology_id).filter(UserDetails.user_id == user_id).first()
-    return templates.TemplateResponse("user_details.html", {"request": request, "user": user, "user_role":user_detail[1], 
+    return templates.TemplateResponse("user_details.html", {"request": request, "user": user, "user_role":user_detail[1],
     "user_technology": user_detail[2],
     "roles": db.query(UserRole).order_by(UserRole.role_name).all(),
     "technologies": db.query(UserTechnology).order_by(UserTechnology.technology_name).all()})
@@ -305,11 +304,11 @@ def get_user_details(request: Request, user_id: int, db: Session = Depends(get_d
     #     "technology_name": user_technology.technology_name
     # }
     user = db.query(User).filter(User.id == user_id).first()
-    user_detail = db.query(UserDetails, UserRole.role_name, UserTechnology.technology_name).join(UserRole, 
-    UserDetails.user_role_id == UserRole.user_role_id).join(UserTechnology, 
+    user_detail = db.query(UserDetails, UserRole.role_name, UserTechnology.technology_name).join(UserRole,
+    UserDetails.user_role_id == UserRole.user_role_id).join(UserTechnology,
     UserDetails.user_technology_id == UserTechnology.user_technology_id).filter(UserDetails.user_id == user_id).first()
     logger.info("User details retrieved successfully for user ID: %d", user_id)
-    return templates.TemplateResponse("user_details.html", {"request": request, "user": user, "user_role":user_detail[1], 
+    return templates.TemplateResponse("user_details.html", {"request": request, "user": user, "user_role":user_detail[1],
     "user_technology": user_detail[2],
     "roles": db.query(UserRole).order_by(UserRole.role_name).all(),
     "technologies": db.query(UserTechnology).order_by(UserTechnology.technology_name).all()})
