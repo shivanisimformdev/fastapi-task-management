@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from models.project import Project, UserProject
 from models.user import User
+from routers.auth import get_scope_user
 from schemas.project import ProjectCreate, ProjectResponse, UserProjectCreate
 from routers.logger import logger
 from database.session import get_db
@@ -11,7 +12,7 @@ router = APIRouter(prefix="/projects", tags=['projects'])
 
 
 @router.post("/projects/")
-def create_project(project: ProjectCreate, db: Session = Depends(get_db)):
+def create_project(project: ProjectCreate, db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
     """
         Creates a new project with the provided details.
 
@@ -30,7 +31,7 @@ def create_project(project: ProjectCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/projects/user/{user_id}")
-def get_projects_created_by_user(user_id: int, db: Session = Depends(get_db)):
+def get_projects_created_by_user(user_id: int, db: Session = Depends(get_db),  current_user: User = Depends(get_scope_user)):
     """
     Retrieves all projects created by the user with the specified user ID.
 
@@ -46,7 +47,7 @@ def get_projects_created_by_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/user_projects/")
-def create_user_project(user_project: UserProjectCreate, db: Session = Depends(get_db)):
+def create_user_project(user_project: UserProjectCreate, db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
     """
     Creates a new user project relationship.
 
@@ -85,7 +86,7 @@ def create_user_project(user_project: UserProjectCreate, db: Session = Depends(g
 
 
 @router.get("/user_projects/{user_id}/projects")
-def get_user_projects(user_id: int, db: Session = Depends(get_db)):
+def get_user_projects(user_id: int, db: Session = Depends(get_db),  current_user: User = Depends(get_scope_user)):
     """
     Retrieves projects associated with a specific user.
 
