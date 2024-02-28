@@ -108,16 +108,22 @@
   </header>
   <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h1 class="h2">Task Management Application</h1>
+            <h1 class="h2">Task Management Portal</h1>
             <div class="btn-toolbar mb-2 mb-md-0">
             </div>
         </div>
+        {% if message %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
 
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">Register</h1>
         <div class="btn-toolbar mb-2 mb-md-0"></div>
         </div>
-        <form method="post", action="{{url_for('create_user')}}" style="width: 1000px;">
+        <form method="post", action="{{url_for('register_user')}}" style="width: 1000px;" id="login-form">
             <div class="input-group mb-3">
                 <input type="text" class="form-control" placeholder="Username" aria-label="Username" name="username" aria-describedby="basic-addon1" required>
             </div>
@@ -130,19 +136,25 @@
             <div class="input-group mb-3">
                 <input type="password" class="form-control" placeholder="Confirm Password" aria-label="Confirm Password" id="confirm_password" aria-describedby="basic-addon1" required>
             </div>
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" role="switch" id="admin_user">
+              <label class="form-check-label" for="flexSwitchCheckDefault">Are you an admin user?</label>
+            </div>
             <button class="btn btn-primary" type="submit" style="width: 100px;" id="submit">Submit</button>
         </form>
   </main>
 </html>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="{{ url_for('static', path='assets/js/bootstrap.bundle.min.js') }}"></script>
+<script type="text/javascript">
   $(document).ready(function() {
     $("#confirm_password").change(function() {
-    var password = $("#password").val();
-    var confirmPassword = $("#confirm_password").val();
-    if (password !== confirmPassword) {
-       alert("Passwords did not match.")
-    }
+      var password = $("#password").val();
+      var confirmPassword = $("#confirm_password").val();
+      if (password !== confirmPassword) {
+        alert("Passwords do not match.")
+      }
     })
   });
+
 </script>

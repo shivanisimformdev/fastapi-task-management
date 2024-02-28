@@ -3,12 +3,18 @@ from datetime import datetime
 
 
 class CreateUserRequest(BaseModel):
+    """
+    Model for creating a new User request.
+    """
     username: str
     email: str
     password_hash: str
 
 
 class Token(BaseModel):
+    """
+    Model for returning token response.
+    """
     access_token: str
     token_type: str
 

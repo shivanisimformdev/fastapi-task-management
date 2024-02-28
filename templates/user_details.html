@@ -16,7 +16,7 @@
       </button>
       <ul class="dropdown-menu">
       {% for role in roles %}
-          <li value={{role.user_role_id}}><a class="dropdown-item" href="#" name="user_role_id">{{role.role_name}}</a></li>
+          <li><a class="dropdown-item">{{role.role_name}}</a></li>
           <input type="hidden" name="user_role_id" value="{{ role.user_role_id }}">
       {% endfor %}
       </ul>
@@ -27,7 +27,7 @@
       </button>
       <ul class="dropdown-menu">
       {% for technology in technologies %}
-          <li value={{technology.user_technology_id}}><a class="dropdown-item" href="#" name="user_technology_id">{{technology.technology_name}}</a></li>
+          <li><a class="dropdown-item">{{technology.technology_name}}</a></li>
           <input type="hidden" name="user_technology_id" value="{{ technology.user_technology_id }}">
       {% endfor %}
       </ul>

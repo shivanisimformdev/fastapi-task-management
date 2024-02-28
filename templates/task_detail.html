@@ -13,16 +13,16 @@
           <th scope="col">#</th>
           <th scope="col">Name</th>
           <th scope="col">Description</th>
+          <th scope="col">Status</th>
         </tr>
       </thead>
       <tbody>
-          {% for task in tasks %}
         <tr>
-          <th scope="row">{{ forloop.counter }}</th>
-          <td>{{ task.task_name }}</td>
-          <td>{{ task.task_description }}</td>
+          <th scope="row">#</th>
+          <td>{{ task_detail.task_name }}</td>
+          <td>{{ task_detail.task_description }}</td>
+          <td>{{ task_detail.status_name }}</td>
         </tr>
-        {% endfor %}
       </tbody>
     </table>
 </main>

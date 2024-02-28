@@ -2,7 +2,7 @@ from database.base import Base
 from datetime import datetime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Text
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Text, Boolean
 
 
 class User(Base):
@@ -11,6 +11,7 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     password_hash = Column(String)
+    is_admin_user = Column(Boolean, default=False)
 
 
 class UserTechnology(Base):
