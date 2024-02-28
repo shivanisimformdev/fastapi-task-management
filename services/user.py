@@ -30,7 +30,6 @@ def get_user_details(user_id: int, db: Session = None):
     if db is None:
         db = SessionLocal()
     user_detail = db.query(UserDetail).get(user_id)
-
     if not user_detail:
         raise HTTPException(status_code=404, detail="User details not found")
     user_role = db.query(UserRole).filter(UserRole.user_role_id == user_detail.user_role_id).first()
