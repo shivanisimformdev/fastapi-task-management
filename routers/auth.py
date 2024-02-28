@@ -59,7 +59,7 @@ def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depen
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could Not Validate User.")
-    token = create_access_token(username=user.username, user_id=user.id, expire_delta=timedelta(minutes=20), scope=form_data.scopes)
+    token = create_access_token(username=user.username, user_id=user.id, expire_delta=timedelta(minutes=20), scope=["admin"] if user.is_admin_user else ["user"])
     return {
         'access_token': token,
         'token_type': 'bearer'

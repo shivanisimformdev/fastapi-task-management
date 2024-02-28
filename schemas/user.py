@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing_extensions import Union, List
 
 from models.user import User
 
@@ -22,8 +23,8 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    username: str | None = None
-    scopes: list[str] = []
+    username: Union[str, None] = None
+    scopes: List[str] = []
 
 
 class UserCreate(BaseModel):

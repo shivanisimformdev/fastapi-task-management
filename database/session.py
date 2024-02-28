@@ -5,8 +5,9 @@ from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
 
+
 # Constructing SQLite database URL
-URL_DATABASE = "sqlite:///./sqlite_db.db"
+URL_DATABASE = os.environ["URL_DATABASE"]
 # URL_DATABASE = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
 
 engine = create_engine(URL_DATABASE)

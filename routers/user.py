@@ -41,7 +41,7 @@ def get_user_by_email_and_password(email: str, password: str, db: Session):
 
 
 @router.get("/home/", response_class=HTMLResponse)
-def home(request: Request, response_class=HTMLResponse):
+def home(request: Request, current_user: User = Depends(get_scope_user) ):
     """
     Renders home page template response.
 
@@ -49,10 +49,10 @@ def home(request: Request, response_class=HTMLResponse):
         Home page template response
     """
     logger.info("Rendering home page template")
-    return templates.TemplateResponse(name="home.html", context={"request":request})
+    return templates.TemplateResponse(name="home.html", context={"request":request, "user":current_user})
 
 @router.get("/register/", response_class=HTMLResponse)
-def render_register_template(request: Request, response_class=HTMLResponse):
+def render_register_template(request: Request):
     """
     Renders registration template.
 

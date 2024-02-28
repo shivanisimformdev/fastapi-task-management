@@ -14,25 +14,31 @@
       {% endif %}
 
       <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
-
         <div class="card" style="width: 18rem;height: 100px;margin-right:50px;">
-          <div class="card-body">
-            <h5 class="card-title"><a href="{{ url_for('get_users') }}" class="card-link">Users</a></h5>
+          {% if user.is_admin_user %}
+            <div class="card-body">
+              <h5 class="card-title"><a href="{{ url_for('get_users') }}" class="card-link">Users</a></h5>
+            </div>
           </div>
-        </div>
-        <div class="card" style="width: 18rem;height: 100px;margin-right:50px;">
-          <div class="card-body">
-            <h5 class="card-title"><a href="{{ url_for('render_role_template') }}" class="card-link">Role</a></h5>
+          <div class="card" style="width: 18rem;height: 100px;margin-right:50px;">
+            <div class="card-body">
+              <h5 class="card-title"><a href="{{ url_for('render_role_template') }}" class="card-link">Role</a></h5>
+            </div>
           </div>
-        </div>
-        <div class="card" style="width: 18rem;height: 100px;margin-right:50px;">
-          <div class="card-body">
-            <h5 class="card-title"><a href="{{ url_for('render_technology_template') }}" class="card-link">Technology</a></h5>
+          <div class="card" style="width: 18rem;height: 100px;margin-right:50px;">
+            <div class="card-body">
+              <h5 class="card-title"><a href="{{ url_for('render_technology_template') }}" class="card-link">Technology</a></h5>
+            </div>
           </div>
-        </div>
+          <div class="card" style="width: 18rem;height: 100px;margin-right:50px;">
+            <div class="card-body">
+              <h5 class="card-title"><a href="{{ url_for('render_project_template') }}" class="card-link">Projects</a></h5>
+            </div>
+          </div>
+        {% endif %}
         <div class="card" style="width: 18rem;height: 100px;margin-right:50px;">
           <div class="card-body">
-            <h5 class="card-title"><a href="{{ url_for('render_project_template') }}" class="card-link">Projects</a></h5>
+            <h5 class="card-title"><a href="{{ url_for('get_tasks_for_user') }}" class="card-link">Projects</a></h5>
           </div>
         </div>
       </div>
