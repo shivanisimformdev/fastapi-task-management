@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from models.project import Project, UserProject
 from models.user import User
+from routers.auth import get_scope_user
 from schemas.project import ProjectCreate, ProjectResponse, UserProjectCreate
 from routers.logger import logger
 from database.session import get_db

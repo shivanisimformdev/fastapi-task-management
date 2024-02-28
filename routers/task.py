@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from models.user import User
 from models.task import TaskStatus, Task
 from models.project import Project
+from routers.auth import  get_scope_user
 from routers.logger import logger
 from datetime import datetime
 from schemas.task import TaskCreate, TaskStatusCreate, TaskDetail
@@ -56,7 +57,7 @@ def render_task_template(request: Request, user_id: int, project_id: int):
 
 @router.post("/user_projects/{user_id}/projects/task/{project_id}/", response_class=HTMLResponse)
 def create_task(request: Request, user_id: int, project_id: int, task_name: str = Form(...), task_description: str = Form(...),
-        task_status: str = Form(...), db: Session = Depends(get_db)):
+        task_status: str = Form(...), db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
     """
         Creates a new task with the provided details.
 
@@ -79,7 +80,7 @@ def create_task(request: Request, user_id: int, project_id: int, task_name: str 
     if not project:
         logger.error(f"Project with ID {project_id} not found")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=project.HTTP_404_NOT_FOUND,
             detail="Project not found"
         )
     user = db.query(User).filter(User.id == user_id).first()
@@ -108,7 +109,7 @@ def create_task(request: Request, user_id: int, project_id: int, task_name: str 
     return templates.TemplateResponse("home.html", context={"request": request})
 
 @router.get("/tasks/{task_id}/", response_class=HTMLResponse)
-def get_task_details(request: Request, task_id: int, db: Session = Depends(get_db)):
+def get_task_details(request: Request, task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
     """
         Retrives task details for specific task.
 
@@ -144,7 +145,7 @@ def get_task_details(request: Request, task_id: int, db: Session = Depends(get_d
     return templates.TemplateResponse("task_detail.html", context={"request":request, "task_detail":task_detail})
 
 @router.get("/user/projects/{user_id}/projects/tasks/{project_id}/", response_class=HTMLResponse)
-def get_tasks_for_project(request: Request, user_id: int, project_id: int, db: Session = Depends(get_db)):
+def get_tasks_for_project(request: Request, user_id: int, project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
     """
         Retrieves all tasks associated with a specific user and project.
 
@@ -179,7 +180,7 @@ def get_tasks_for_project(request: Request, user_id: int, project_id: int, db: S
 
 
 @router.get("/task/{task_id}/owner/")
-def get_task_with_owner_details(task_id: int, db: Session = Depends(get_db)):
+def get_task_with_owner_details(task_id: int, db: Session = Depends(get_db),current_user: User = Depends(get_scope_user) ):
     """
         Retrieves details of the task identified by the given task ID including the owner's username and email.
 
@@ -212,7 +213,7 @@ def get_task_with_owner_details(task_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/task/{task_id}/project_detail/", response_class=HTMLResponse)
-def get_task_with_project_details(request: Request, task_id: int, db: Session = Depends(get_db)):
+def get_task_with_project_details(request: Request, task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
     """
         Retrieves details of the task identified by the given task ID.
 
