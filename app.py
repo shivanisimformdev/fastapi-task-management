@@ -13,3 +13,5 @@ app.include_router(task.router)
 app.include_router(user.router)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+Base.metadata.create_all(bind=engine)

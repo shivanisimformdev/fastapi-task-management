@@ -6,6 +6,7 @@ from sqlalchemy import or_
 from models.user import UserDetail, UserRole, UserTechnology, User
 from database.session import get_db
 from routers.logger import logger
+from routers.auth import get_scope_user
 from schemas.user import UserCreate, GetUser
 from schemas.user_role import UserRoleCreate
 from schemas.user_detail import UserDetailResponse, UserDetailsCreate
@@ -98,7 +99,7 @@ def register_user(request: Request, username: str = Form(...), password: str = F
         return RedirectResponse(url='/users/register/')
     logger.info("Creating a new user with username: %s and email: %s", username, email)
     user = create_user(username, password, email, is_admin_user, db)
-    return RedirectResponse(url='/users/login/')
+    return templates.TemplateResponse("login.html", context={"request":request})
 
 @router.get("/login/", response_class=HTMLResponse)
 def login_user(request: Request, response_class=HTMLResponse):
