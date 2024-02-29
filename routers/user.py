@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from models.user import UserDetail, UserRole, UserTechnology, User
 from database.session import get_db
+from routers.auth import get_scope_user
 from routers.logger import logger
 from schemas.user import UserCreate, GetUser
 from schemas.user_role import UserRoleCreate

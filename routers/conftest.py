@@ -4,19 +4,25 @@ from typing import Any
 from typing import Generator
 
 import pytest
+from faker import Faker
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from database.base import Base
+from routers import auth, project, task, user
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # this is to include backend dir in sys.path so that we can import from db,main.py
 
-from app import Base
+# from app import Base
 from database.session import get_db
 # from apis.base import api_router
-import auth, project, task, user
+# from routers.logger import auth, project, task, user
+
+fake = Faker()
 
 
 def start_application():
@@ -77,3 +83,39 @@ def client(
     app.dependency_overrides[get_db] = _get_test_db
     with TestClient(app) as client:
         yield client
+
+
+access_token = None
+
+
+@pytest.fixture(scope="function")
+def access_token_fixture(client):
+    global access_token
+
+    if access_token is None:
+        # Generate fake user data
+        fake_username = fake.user_name()
+        fake_email = fake.email()
+        fake_password = fake.password()
+
+        # Step 1: Create a new user with the fake credentials
+        create_user_response = client.post(
+            "/register/",
+            json={"username": fake_username, "email": fake_email, "password_hash": fake_password, "is_admin_user": True}
+        )
+        assert create_user_response.status_code == 201
+
+        # Step 2: Log in with the fake user credentials to obtain an access token
+        login_response = client.post(
+            "/auth/token",
+            data={"username": fake_username, "password": fake_password},
+        )
+        assert login_response.status_code == 200
+
+        # Extract the access token from the response
+        token_data = login_response.json()
+        assert "access_token" in token_data
+
+        access_token = token_data["access_token"]
+
+    return access_token

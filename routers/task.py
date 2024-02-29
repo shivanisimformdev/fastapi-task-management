@@ -36,8 +36,9 @@ def create_task_status(request: Request, task_status: str = Form(...), db: Sessi
             Home page template response.
 
     """
-    new_task_status = TaskStatus(**task_status.dict())
-    db.add(task_status)
+
+    new_task_status = TaskStatus(**task_status.model_dump())
+    db.add(new_task_status)
     db.commit()
     db.refresh(new_task_status)
     return RedirectResponse(url="/users/home/")
@@ -58,6 +59,7 @@ def render_task_template(request: Request, user_id: int, project_id: int):
 @router.post("/user_projects/{user_id}/projects/task/{project_id}/", response_class=HTMLResponse)
 def create_task(request: Request, user_id: int, project_id: int, task_name: str = Form(...), task_description: str = Form(...),
         task_status: str = Form(...), db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
+
     """
         Creates a new task with the provided details.
 
