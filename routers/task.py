@@ -240,7 +240,7 @@ def get_task_with_project_details(request: Request, task_id: int, db: Session = 
         logger.error(f"Task with ID {task_id} not found")
     return templates.TemplateResponse("task_detail.html", context={"request":request, "task_detail":task_project_details})
 
-@router.get("/tasks/user/", response_class=HTMLResponse)
+@router.get("/user/", response_class=HTMLResponse)
 def get_tasks_for_user(request: Request, current_user: User = Depends(get_scope_user)):
     """
         Retrieves all tasks of user.
