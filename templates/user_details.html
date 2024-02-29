@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block main %}
+
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">User Details</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+    </div>
+  </div>
+
+  <form method="post" action="{{url_for('create_user_details', user_id=user.id)}}" style="width: 1000px;" class="border-bottom mb-3">
+    <div class="dropdown mb-3">
+      <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          Select Role
+      </button>
+      <ul class="dropdown-menu">
+      {% for role in roles %}
+          <li><a class="dropdown-item">{{role.role_name}}</a></li>
+          <input type="hidden" name="user_role_id" value="{{ role.user_role_id }}">
+      {% endfor %}
+      </ul>
+    </div>
+    <div class="dropdown mb-3">
+      <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          Select Technology
+      </button>
+      <ul class="dropdown-menu">
+      {% for technology in technologies %}
+          <li><a class="dropdown-item">{{technology.technology_name}}</a></li>
+          <input type="hidden" name="user_technology_id" value="{{ technology.user_technology_id }}">
+      {% endfor %}
+      </ul>
+    </div>
+  <button class="btn btn-primary mb-3" type="submit" style="width: 100px;">Submit</button>
+  </form>
+
+  <table class="table" style="width: 1000px;">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Role</th>
+        <th scope="col">Technology</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">#</th>
+        <td scope="row">{{ user_role }}</td>
+        <td scope="row">{{ user_technology }}</td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+
+{% endblock main %}
+{% block javascript %}
+<script src="{{ url_for('static', path='assets/js/bootstrap.bundle.min.js') }}"></script>
+{% endblock javascript %}

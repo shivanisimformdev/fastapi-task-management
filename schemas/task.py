@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing_extensions import Optional
 
 
 class TaskStatusCreate(BaseModel):
