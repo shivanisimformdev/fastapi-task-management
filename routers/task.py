@@ -4,7 +4,7 @@ from models.user import User
 from models.task import TaskStatus, Task
 from models.project import Project
 from routers.auth import  get_scope_user
-from routers.logger import logger
+from logger import logger
 from datetime import datetime
 from schemas.task import TaskCreate, TaskStatusCreate, TaskDetail
 from database.session import get_db

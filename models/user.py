@@ -25,7 +25,7 @@ class UserRole(Base):
     role_name = Column(String)
 
 
-class UserDetail(Base):
+class UserProfile(Base):
     __tablename__ = "user_details"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'))

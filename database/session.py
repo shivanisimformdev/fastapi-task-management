@@ -2,8 +2,12 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
+from typing import Type, Union
+from sqlalchemy.orm import Session
+from fastapi import HTTPException
 load_dotenv()
+from logger import logger
+
 
 # Constructing SQLite database URL
 URL_DATABASE = "sqlite:///./sqlite_db.db"
@@ -26,3 +30,19 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def commit_db(db: Session, new_instance) -> Type:
+    try:
+        db.add(new_instance)
+        db.commit()
+        db.refresh(new_instance)
+        return new_instance
+    except Exception:
+        logger.error("Error occurred while creating instance")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create instance")
+
+
+def get_db_session(db: Session = None) -> Session:
+    return db if db else SessionLocal()

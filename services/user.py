@@ -1,26 +1,12 @@
 from models.user import User
-from utils.hash_pwd import hash_password
-from schemas.user import UserCreate
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from models.user import UserDetail, UserRole, UserTechnology
+from models.user import UserProfile, UserRole, UserTechnology
 from schemas.user_role import UserRoleCreate
 from schemas.user_technology import UserTechnologyCreate
-from schemas.user_detail import UserDetailsCreate
-from database.session import SessionLocal
-from routers.logger import logger
-
-
-def create_user(user: UserCreate, db):
-    """
-    Creates a new user with the provided user details in the database.
-    """
-    db_user = User(username=user.username, email=user.email)
-    db_user.password_hash = hash_password(user.password)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+from schemas.user_detail import UserProfilesCreate
+from database.session import SessionLocal, get_db_session, commit_db
+from logger import logger
 
 
 def get_user_details(user_id: int, db: Session = None):
@@ -29,7 +15,7 @@ def get_user_details(user_id: int, db: Session = None):
     """
     if db is None:
         db = SessionLocal()
-    user_detail = db.query(UserDetail).get(user_id)
+    user_detail = db.query(UserProfile).get(user_id)
 
     if not user_detail:
         raise HTTPException(status_code=404, detail="User details not found")
@@ -48,13 +34,10 @@ def create_user_role(user_role: UserRoleCreate, db: Session = None):
     """
     Creates a new user role with the provided role details in the database.
     """
-    if db is None:
-        db = SessionLocal()
+    db = get_db_session(db)
     logger.info("Creating a new user role with name: %s", user_role.role_name)
     new_user_role = UserRole(**user_role.dict())
-    db.add(new_user_role)
-    db.commit()
-    db.refresh(new_user_role)
+    new_user_role = commit_db(db, new_user_role)
     logger.info("User role created successfully with ID: %d", new_user_role.user_role_id)
     return new_user_role
 
@@ -63,23 +46,19 @@ def create_user_technology(user_technology: UserTechnologyCreate, db: Session = 
     """
     Creates a new user technology with the provided technology details in the database.
     """
-    if db is None:
-        db = SessionLocal()
+    db = get_db_session(db)
     logger.info("Creating a new user technology with name: %s", user_technology.technology_name)
     new_user_technology = UserTechnology(**user_technology.dict())
-    db.add(new_user_technology)
-    db.commit()
-    db.refresh(new_user_technology)
+    new_user_technology = commit_db(db, new_user_technology)
     logger.info("User technology created successfully with ID: %d", new_user_technology.user_technology_id)
     return new_user_technology
 
 
-def create_user_details(user_details: UserDetailsCreate, db: Session = None):
+def create_user_details(user_details: UserProfilesCreate, db: Session = None):
     """
     Creates a new user detail entry with the provided user details in the database.
     """
-    if db is None:
-        db = SessionLocal()
+    db = get_db_session()
     logger.info("Creating a new user detail entry with user_id: %d", user_details.user_id)
     user = db.query(User).filter(User.id == user_details.user_id).first()
     if not user:
@@ -93,11 +72,9 @@ def create_user_details(user_details: UserDetailsCreate, db: Session = None):
     if not user_technology:
         logger.error("User technology not found with ID: %d", user_details.user_technology_id)
         raise HTTPException(status_code=404, detail="User technology not found")
-    new_user_detail = UserDetail(**user_details.dict())
+    new_user_detail = UserProfile(**user_details.dict())
 
-    db.add(new_user_detail)
-    db.commit()
-    db.refresh(new_user_detail)
+    new_user_detail = commit_db(new_user_detail)
 
     logger.info("User detail entry created successfully with ID: %d", new_user_detail.id)
     return new_user_detail

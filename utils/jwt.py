@@ -1,7 +1,5 @@
 # jwt.py
 from datetime import datetime, timedelta
-
-from fastapi import Depends
 from jose import jwt
 from sqlalchemy.orm import Session
 from models.user import User

@@ -1,7 +1,4 @@
 from pydantic import BaseModel
-from datetime import datetime
-
-from models.user import User
 
 
 class CreateUserRequest(BaseModel):
@@ -20,19 +17,9 @@ class TokenData(BaseModel):
     scopes: list[str] = []
 
 
-class UserCreate(BaseModel):
-    """
-    Model for creating a new User.
-    """
-    username: str
-    email: str
-    password: str
-
-
 class GetUser(BaseModel):
     """
     Model for getting user details.
     """
     email: str
     password: str
-
