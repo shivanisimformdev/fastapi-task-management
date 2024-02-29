@@ -44,14 +44,14 @@ def create_task_status(request: Request, task_status: str = Form(...), db: Sessi
 
 
 @router.get("/task/{user_id}/", response_class=HTMLResponse)
-def render_task_template(request: Request, user_id: int):
+def render_task_template(request: Request, user_id: int, db: Session = Depends(get_db)):
     """
-        Renders template for adding task for specific user and project.
+        Renders template for adding task for specific user.
 
         Args:
             user_id(int): ID of the user to create task for.
-            project(int): ID of the project to which task belongs.
     """
+    user = db.query(User).filter(User.id == user_id).first()
     logger.info("Rendering template for adding task")
     return templates.TemplateResponse("add_task.html", context={"request": request, "user_id": user_id, "user": user})
 
@@ -63,9 +63,10 @@ def create_task(request: Request, user_id: int, task_name: str = Form(...), task
 
         Args:
             user_id (int): ID of the user to create task for.
-            project_id(int): ID of the project to which task belongs.
+            user_id(int): ID of the user to which task belongs.
             task_name(str): Name of the task.
             task_description(str): Description of the task.
+            task_status(str): Status of the task.
             db (Session): Database session.
 
         Returns:
@@ -76,24 +77,25 @@ def create_task(request: Request, user_id: int, task_name: str = Form(...), task
 
     """
     logger.info("Creating a new task")
-    # project = db.query(Project).filter(Project.project_id == project_id).first()
-    # if not project:
-    #     logger.error(f"Project with ID {project_id} not found")
-    #     raise HTTPException(
-    #         status_code=project.HTTP_404_NOT_FOUND,
-    #         detail="Project not found"
-    #     )
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         logger.error(f"User with ID {user_id} not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    project = db.query(UserProject).filter(UserProject.user_id == user_id).first()
+    if not project:
+        logger.error(f"Project with user ID {user_id} not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Project not found"
+        )
 
     task_status = TaskStatus(task_status_name=task_status)
     db.add(task_status)
     db.commit()
     db.refresh(task_status)
     new_task = Task(
-        project_id=project_id,
+        project_id=project.user_project_id,
         task_name=task_name,
         task_description=task_description,
         task_owner_id=user_id,
@@ -106,15 +108,17 @@ def create_task(request: Request, user_id: int, task_name: str = Form(...), task
     db.refresh(new_task)
 
     logger.info("Task created successfully")
-    return templates.TemplateResponse("home.html", context={"request": request, "message":"Task created successfully"}, "user": user)
+    user = db.query(User).filter(User.id == user_id).first()
+    return templates.TemplateResponse("list_tasks.html", context={"request": request, "message":"Task created successfully", "user": user, "user_id":user_id})
 
-@router.get("/tasks/{user_id}/{task_id}/", response_class=HTMLResponse)
+@router.get("/details/{user_id}/{task_id}/", response_class=HTMLResponse)
 def get_task_details(request: Request, user_id: int, task_id: int, db: Session = Depends(get_db)):
     """
         Retrives task details for specific task.
 
         Args:
             task_id(int): ID of the task to get details for.
+            user_id(int): ID of the user to which task belongs.
             db (Session): Database session.
 
         Returns:
@@ -245,8 +249,15 @@ def get_tasks_for_user(request: Request, user_id: int, db: Session = Depends(get
     """
         Retrieves all tasks of user.
 
+        Args:
+            user_id(int): ID of the user to which task belongs.
+            db (Session): Database session.
+
         Returns:
             Task list template response.
+
+        Raises:
+            HTTPException: If user not found.
     """
     logger.info(f"Retrieving tasks for user with ID {user_id}")
     user = db.query(User).filter(User.id == user_id).first()
@@ -256,7 +267,7 @@ def get_tasks_for_user(request: Request, user_id: int, db: Session = Depends(get
     user_project_ids = db.query(UserProject.project_id).filter(UserProject.user_id == user_id).all()
     project_ids = [project_id for project_id, in user_project_ids]
     projects = db.query(Project).filter(Project.project_id.in_(project_ids)).all()
-    tasks_list = []
+    # tasks_list = []
     for project in projects:
         tasks = project.tasks
         # tasks_list.append(tasks)
@@ -265,40 +276,95 @@ def get_tasks_for_user(request: Request, user_id: int, db: Session = Depends(get
         if not status_name:
             logger.error(f"Task status with id {task.status_id} does not exist")
         task.status_name = status_name
-<<<<<<< HEAD
-    logger.info(f"Tasks retrieved successfully")
+    logger.info(f"Tasks retrieved successfully for user with ID {user_id}")
     return templates.TemplateResponse("list_tasks.html", context={"request": request, "tasks":tasks, "user_id":user_id, "user": user})
-=======
-    logger.info(f"Tasks retrieved successfully for project with ID {project_id}")
-    return templates.TemplateResponse("list_tasks.html", context={"request": request, "tasks":tasks})
 
+@router.get("/{user_id}/{task_id}/", response_class=HTMLResponse)
+def render_task_update_template(request: Request, user_id: int, task_id:int, db: Session = Depends(get_db)):
+    """
+        Renders template for updating task for specific user.
 
-@router.put("update/{task_id}")
-def update_task(task_id: int, task_update: TaskUpdate, db: Session = Depends(get_db)):
+        Args:
+            user_id(int): ID of the user to create task for.
     """
-    Update task details for the specified task ID.
+    task = db.query(Task).filter(Task.task_id == task_id).first()
+    task_status = db.query(TaskStatus.task_status_name).filter(TaskStatus.task_status_id == task.status_id).scalar()
+    user = db.query(User).filter(User.id == user_id).first()
+    logger.info("Rendering template for updating task")
+    return templates.TemplateResponse("edit_task.html", context={"request": request, "user_id": user_id, "user": user, "task":task,
+    "task_status":task_status})
+
+@router.put("/{user_id}/{task_id}/", response_class=HTMLResponse)
+def update_task(request: Request, user_id:int, task_id: int, task_name: str = Form(...), task_description: str = Form(...),
+        task_status: str = Form(...), db: Session = Depends(get_db)):
     """
+        Updates task with the provided details.
+
+        Args:
+            user_id (int): ID of the user to create task for.
+            task_id(int): ID of the task to update.
+            task_name(str): Name of the task.
+            task_description(str): Description of the task.
+            task_status(str): Status of the task.
+            db (Session): Database session.
+
+        Returns:
+            Home page template response with success response.
+
+        Raises:
+            HTTPException: If task or user not found.
+
+    """
+    logger.info(f"Updating a task with ID : {task_id}")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        logger.error(f"User with ID {user_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     db_task = db.query(Task).filter(Task.task_id == task_id).first()
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    for attr, value in task_update.dict(exclude_unset=True).items():
-        setattr(db_task, attr, value)
-
+    task_status = TaskStatus(task_status_name=task_status)
+    db.add(task_status)
     db.commit()
-    db.refresh(db_task)
-    return db_task
+    db.refresh(task_status)
+    task_dict = dict()
+    task_dict["task_name"] = task_name
+    task_dict["task_description"] = task_description
+    task_dict["status_id"] = task_status.task_status_id
+    for attr, value in task_dict.items():
+        setattr(db_task, attr, value)
+    db.commit()
+    db.refresh(new_task)
+
+    logger.info("Task updated successfully")
+    return templates.TemplateResponse("list_tasks.html", context={"request": request, "message":"Task updated successfully", "user": user, "user_id": user_id})
 
 
-@router.delete("delete/{task_id}")
-def delete_task(task_id: int, db: Session = Depends(get_db)):
+@router.get("/delete/{user_id}/{task_id}/", response_class=HTMLResponse)
+def delete_task(request: Request, user_id: int, task_id: int, db: Session = Depends(get_db)):
     """
     Delete the task with the specified task ID.
+
+    Args:
+        user_id: ID of the user to which task belongs.
+        task_id: ID of the task to delete.
+        db (Session): Database session.
+
+    Returns:
+        Home page template response with success response.
+
+    Raises:
+        HTTPException: If task or user not found.
     """
+    logger.info(f"Deleting a task with ID : {task_id}")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        logger.error(f"User with ID {user_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     db_task = db.query(Task).filter(Task.task_id == task_id).first()
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
     db.delete(db_task)
     db.commit()
-    return {"message": "Task deleted successfully"}
->>>>>>> 30114f70db92e70ad14aed2b1968395c4810f601
+    return templates.TemplateResponse("home.html", context={"request": request, "message":"Task deleted successfully", "user": user, "user_id": user_id})

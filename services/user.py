@@ -18,7 +18,7 @@ def create_user(username: str, password: str, email: str, is_admin_user: str, db
     if db is None:
         db = SessionLocal()
 
-    db_user = User(username=username, email=email, is_admin_user=True if is_admin_user == "Yes" else "No")
+    db_user = User(username=username, email=email, is_admin_user=True if is_admin_user == "Yes" else False)
     db_user.password_hash = hash_password(password)  # You would need to implement hash_password function
     db.add(db_user)
     db.commit()

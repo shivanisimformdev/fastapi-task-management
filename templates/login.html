@@ -156,12 +156,11 @@ loginForm.addEventListener('submit', async (event) => {
                 'password':password
             })
         });
-
         const data = await response.json();
         const accessToken = data.access_token;
         const user_id = data.user_id;
         localStorage.setItem('accessToken', accessToken);
-        window.location.href = '/tasks/user/' + user_id + '/';
+        window.location.href = '/tasks/tasks/user/' + user_id + '/';
         // const headers = {
         //     'token': 'Bearer'.concat(accessToken),
         //     'Content-Type': 'application/json'
