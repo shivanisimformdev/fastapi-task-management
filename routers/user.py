@@ -38,7 +38,7 @@ def create_user_route(user: UserCreate, db: Session = Depends(get_db)):
     return create_user(user, db)
 
 
-@router.get("/login")
+@router.post("/login")
 def login_user(user: GetUser, db: Session = Depends(get_db)):
     user = get_user_by_email_and_password(user.email, user.password, db)
     return user
