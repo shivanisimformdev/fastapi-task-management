@@ -209,7 +209,6 @@
                     Home
                   </a>
                 </li>
-                {% if user.is_admin_user %}
                 <li class="nav-item">
                   <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('get_users')}}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people" viewBox="0 0 16 16">
@@ -245,7 +244,6 @@
                     Projects
                   </a>
                 </li>
-                {% endif %}
                 <li class="nav-item">
                   <a class="nav-link d-flex align-items-center gap-2" href="{{ url_for('get_tasks_for_user')}}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-layout-text-sidebar-reverse" viewBox="0 0 16 16">

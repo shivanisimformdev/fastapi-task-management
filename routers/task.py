@@ -57,7 +57,7 @@ def render_task_template(request: Request, user_id: int, project_id: int):
 
 @router.post("/user_projects/{user_id}/projects/task/{project_id}/", response_class=HTMLResponse)
 def create_task(request: Request, user_id: int, project_id: int, task_name: str = Form(...), task_description: str = Form(...),
-        task_status: str = Form(...), db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
+        task_status: str = Form(...), db: Session = Depends(get_db)):
     """
         Creates a new task with the provided details.
 
@@ -106,10 +106,10 @@ def create_task(request: Request, user_id: int, project_id: int, task_name: str 
     db.refresh(new_task)
 
     logger.info("Task created successfully")
-    return templates.TemplateResponse("home.html", context={"request": request})
+    return templates.TemplateResponse("home.html", context={"request": request, "message":"Task created successfully"})
 
 @router.get("/tasks/{task_id}/", response_class=HTMLResponse)
-def get_task_details(request: Request, task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
+def get_task_details(request: Request, task_id: int, db: Session = Depends(get_db)):
     """
         Retrives task details for specific task.
 

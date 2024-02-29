@@ -43,7 +43,7 @@ def create_project(request: Request, project_name: str = Form(...), project_desc
     db.commit()
     db.refresh(new_project)
     logger.info("New project created successfully")
-    return RedirectResponse(url="/users/home/")
+    return templates.TemplateResponse("home.html", context={"request":request, "message":"Project created successfully"})
 
 
 @router.get("/projects/user/{user_id}/", response_class=HTMLResponse)
@@ -132,7 +132,7 @@ def create_user_project(request: Request, user_id: int, project_id: int = Form(.
     db.commit()
     db.refresh(new_user_project)
     logger.info("User project relationship created successfully")
-    return RedirectResponse(url="/users/home/")
+    return templates.TemplateResponse("home.html", context={"request":request, "message":"Project assigned successfully"})
 
 @router.get("/user_projects/{user_id}/projects/", response_class=HTMLResponse)
 def get_user_projects(request: Request, user_id: int, db: Session = Depends(get_db)):
