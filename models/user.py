@@ -10,8 +10,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
-    is_admin_user = Column(Boolean, default=False)
     password_hash = Column(String)
+    is_admin_user  = Column(Boolean, default=False)
 
 class UserTechnology(Base):
     __tablename__ = "user_technologies"

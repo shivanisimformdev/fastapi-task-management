@@ -2,9 +2,11 @@ from fastapi import Depends, HTTPException, status, APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from sqlalchemy.testing import db
+
 from models.user import User
 from models.task import TaskStatus, Task
-from models.project import Project
+from models.project import Project, UserProject
 from routers.auth import  get_scope_user
 from routers.logger import logger
 from datetime import datetime
@@ -243,6 +245,33 @@ def get_task_with_project_details(request: Request, task_id: int, db: Session = 
     return templates.TemplateResponse("task_detail.html", context={"request":request, "task_detail":task_project_details})
 
 @router.get("/tasks/user/", response_class=HTMLResponse)
+def get_tasks_for_user(request: Request,user_id: int, project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
+    """
+        Retrieves all tasks of user.
+
+        Returns:
+            Task list template response.
+    """
+    logger.info(f"Retrieving tasks for user with ID {current_user.id}")
+    user = db.query(User).filter(User.id == current_user.id).first()
+    if not user:
+        logger.error(f"User with ID {user_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    user_project_ids = db.query(UserProject.project_id).filter(UserProject.user_id == current_user.id).all()
+    project_ids = [project_id for project_id, in user_project_ids]
+    projects = db.query(Project).filter(Project.project_id.in_(project_ids)).all()
+    tasks_list = []
+    for project in projects:
+        tasks = project.tasks
+        tasks_list.append(tasks)
+    for task in tasks_list:
+        status_name = db.query(TaskStatus.task_status_name).filter(TaskStatus.task_status_id == task.status_id).scalar()
+        if not status_name:
+            logger.error(f"Task status with id {task.status_id} does not exist")
+        task.status_name = status_name
+    logger.info(f"Tasks retrieved successfully for project with ID {project_id}")
+    return templates.TemplateResponse("list_tasks.html", context={"request": request, "tasks":tasks})
+@router.get("/user/", response_class=HTMLResponse)
 def get_tasks_for_user(request: Request, current_user: User = Depends(get_scope_user)):
     """
         Retrieves all tasks of user.

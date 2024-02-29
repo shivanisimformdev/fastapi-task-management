@@ -7,6 +7,7 @@ from models.user import UserDetail, UserRole, UserTechnology, User
 from database.session import get_db
 from routers.auth import get_scope_user
 from routers.logger import logger
+from routers.auth import get_scope_user
 from schemas.user import UserCreate, GetUser
 from schemas.user_role import UserRoleCreate
 from schemas.user_detail import UserDetailResponse, UserDetailsCreate
@@ -40,9 +41,8 @@ def get_user_by_email_and_password(email: str, password: str, db: Session):
         raise HTTPException(status_code=404, detail="User not found or invalid credentials")
     return user
 
-
 @router.get("/home/", response_class=HTMLResponse)
-def home(request: Request, current_user: User = Depends(get_scope_user) ):
+def home(request: Request):
     """
     Renders home page template response.
 
@@ -50,7 +50,7 @@ def home(request: Request, current_user: User = Depends(get_scope_user) ):
         Home page template response
     """
     logger.info("Rendering home page template")
-    return templates.TemplateResponse(name="home.html", context={"request":request, "user":current_user})
+    return templates.TemplateResponse(name="home.html", context={"request":request})
 
 @router.get("/register/", response_class=HTMLResponse)
 def render_register_template(request: Request):
@@ -99,7 +99,7 @@ def register_user(request: Request, username: str = Form(...), password: str = F
         return RedirectResponse(url='/users/register/')
     logger.info("Creating a new user with username: %s and email: %s", username, email)
     user = create_user(username, password, email, is_admin_user, db)
-    return RedirectResponse(url='/users/login/')
+    return templates.TemplateResponse("login.html", context={"request":request})
 
 @router.get("/login/", response_class=HTMLResponse)
 def login_user(request: Request, response_class=HTMLResponse):
@@ -159,7 +159,6 @@ def create_user_details(request: Request, user_id: int, user_role_id: str = Form
         HTTPException: If user, user role, or user technology not found.
 
     """
-    print("dfdsfsdfsdfsdfsdf", user_role_id, user_technology_id)
     logger.info("Creating a new user detail entry with user_id: %d", user_id)
     user, user_detail  = create_details_of_user(user_id, user_role_id, user_technology_id, db)
     return templates.TemplateResponse("user_details.html", {"request": request, "user": user, "user_role":user_detail[1],
@@ -196,7 +195,7 @@ def render_role_template(request: Request):
         Add role template response.
     """
     logger.info("Rendering template for adding role")
-    return templates.TemplateResponse("role.html", {"request": request})
+    return templates.TemplateResponse("role.html", context={"request": request})
 
 @router.post("/user/roles/", response_class=HTMLResponse)
 def create_user_role(request: Request, role_name: str = Form(...), db: Session = Depends(get_db)):
@@ -212,8 +211,7 @@ def create_user_role(request: Request, role_name: str = Form(...), db: Session =
     """
     logger.info("Creating a new user role with name: %s", role_name)
     create_user_role_data(role_name, db)
-    return RedirectResponse(url="/users/home/")
-
+    return templates.TemplateResponse("role.html",context={"request": request, "message":"Technology created successfully"})
 
 @router.get("/technology/", response_class=HTMLResponse)
 def render_technology_template(request: Request):
@@ -240,7 +238,7 @@ def create_user_technology(request: Request, technology_name: str = Form(...), d
     """
     logger.info("Creating a new user technology with name: %s", technology_name)
     create_user_technology_data(technology_name, db)
-    return RedirectResponse(url="/users/home/")
+    return templates.TemplateResponse("home.html", context={"request": request, "message":"Technology created successfully"})
 
 
 @router.get("/logout/", response_class=HTMLResponse)
