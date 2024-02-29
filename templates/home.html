@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block main %}
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Task Management Portal</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+        </div>
+      </div>
+      {% if message %}
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endif %}
+
+      <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+        <div class="card" style="width: 18rem;height: 100px;margin-right:50px;">
+          {% if user.is_admin_user %}
+            <div class="card-body">
+              <h5 class="card-title"><a href="{{ url_for('get_users') }}" class="card-link">Users</a></h5>
+            </div>
+          </div>
+          <div class="card" style="width: 18rem;height: 100px;margin-right:50px;">
+            <div class="card-body">
+              <h5 class="card-title"><a href="{{ url_for('render_role_template') }}" class="card-link">Role</a></h5>
+            </div>
+          </div>
+          <div class="card" style="width: 18rem;height: 100px;margin-right:50px;">
+            <div class="card-body">
+              <h5 class="card-title"><a href="{{ url_for('render_technology_template') }}" class="card-link">Technology</a></h5>
+            </div>
+          </div>
+          <div class="card" style="width: 18rem;height: 100px;margin-right:50px;">
+            <div class="card-body">
+              <h5 class="card-title"><a href="{{ url_for('render_project_template') }}" class="card-link">Projects</a></h5>
+            </div>
+          </div>
+        {% endif %}
+        <div class="card" style="width: 18rem;height: 100px;margin-right:50px;">
+          <div class="card-body">
+            <h5 class="card-title"><a href="{{ url_for('get_tasks_for_user') }}" class="card-link">Projects</a></h5>
+          </div>
+        </div>
+      </div>
+    </main>
+{% endblock main %}
+{% block javascript %}
+{% endblock javascript %}
