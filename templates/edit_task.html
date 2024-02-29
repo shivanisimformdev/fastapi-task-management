@@ -9,7 +9,7 @@
     </div>
     <form id="edit-form" style="width: 1000px;">
         <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="Name" aria-label="task_name" value={{task.task_name}} name="task_name" aria-describedby="basic-addon1" required>
+            <input type="text" class="form-control" placeholder="Name" aria-label="task_name" id="task_name" value={{task.task_name}} name="task_name" aria-describedby="basic-addon1" required>
         </div>
         <div class="input-group mb-3">
             <textarea class="form-control" aria-label="description" id="task_description" placeholder="Description" value={{task.task_description}} name="task_description" required></textarea>
@@ -25,34 +25,34 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
+    $("#task_name").val("{{ task.task_name }}");
     $("#task_description").val("{{ task.task_description }}");
 })
 const editForm = document.getElementById('edit-form');
-editForm.addEventListener('submit', async (event) => {
+editForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    const formData = new FormData(document.getElementById("edit-form"));
+    const formData = new FormData(editForm);
     const task_name = formData.get("task_name");
     const task_description = formData.get("task_description");
     const task_status = formData.get("task_status");
     const user_id = "{{ user_id }}"
     const task_id = "{{ task.task_id }}"
     try {
-        const response =  await fetch("/tasks/" + user_id + "/" + task_id + "/", {
+        const response =  fetch("/tasks/" + user_id + "/" + task_id + "/", {
             method: "PUT",
             body: new URLSearchParams({
                 'task_name': task_name,
                 'task_description': task_description,
                 'task_status': task_status
-            }),
-            headers: {
-                "Content-Type": "application/json"
-            }
+            })
         });
-        window.location.href = '/tasks/user/' + user_id + '/';
+
     }
     catch(error) {
         console.error("There was a problem with the fetch operation:", error);
     };
+    const userid = "{{ user_id }}"
+    window.location.href = "/tasks/home/" + parseInt(userid) + "/";
 });
 </script>
 {% endblock javascript %}

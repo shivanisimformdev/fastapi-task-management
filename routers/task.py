@@ -109,7 +109,7 @@ def create_task(request: Request, user_id: int, task_name: str = Form(...), task
 
     logger.info("Task created successfully")
     user = db.query(User).filter(User.id == user_id).first()
-    return templates.TemplateResponse("list_tasks.html", context={"request": request, "message":"Task created successfully", "user": user, "user_id":user_id})
+    return templates.TemplateResponse("home.html", context={"request": request, "message":"Task created successfully", "user": user, "user_id":user_id})
 
 @router.get("/details/{user_id}/{task_id}/", response_class=HTMLResponse)
 def get_task_details(request: Request, user_id: int, task_id: int, db: Session = Depends(get_db)):
@@ -335,11 +335,31 @@ def update_task(request: Request, user_id:int, task_id: int, task_name: str = Fo
     for attr, value in task_dict.items():
         setattr(db_task, attr, value)
     db.commit()
-    db.refresh(new_task)
+    db.refresh(db_task)
 
     logger.info("Task updated successfully")
     return templates.TemplateResponse("list_tasks.html", context={"request": request, "message":"Task updated successfully", "user": user, "user_id": user_id})
 
+@router.get("/home/{user_id}/", response_class=HTMLResponse)
+def render_edit_success_template(request: Request, user_id: int, db: Session = Depends(get_db)):
+    """
+    Renders home page after successful edit operation.
+
+    Args:
+        user_id(int): ID of the user to which task belongs.
+
+    Returns:
+        Home page template response with success response.
+
+    Raises:
+        HTTPException: If user not found.
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        logger.error(f"User with ID {user_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    logger.info(f"Rendering template for home page")
+    return templates.TemplateResponse("home.html", context={"request":request, "message":"Task updated successfully", "user": user, "user_id": user_id})
 
 @router.get("/delete/{user_id}/{task_id}/", response_class=HTMLResponse)
 def delete_task(request: Request, user_id: int, task_id: int, db: Session = Depends(get_db)):
