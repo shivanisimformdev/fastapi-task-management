@@ -13,7 +13,7 @@ from schemas.user_technology import UserTechnologyCreate
 from utils.hash_pwd import hash_password
 from utils.verify_pwd import verify_password
 from services.user import get_details_of_user, create_user, create_user_technology_data, create_user_role_data, create_details_of_user
-
+from routers.auth import get_scope_user
 router = APIRouter(prefix="/users", tags=['users'])
 
 templates = Jinja2Templates(directory="templates")

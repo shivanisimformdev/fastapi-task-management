@@ -3,7 +3,7 @@ from conftest import client
 
 def create_user(client):
     response = client.post(
-        "/users/", json={
+        "/users/register/", json={
             "username": "test02",
             "email": "test02@gmail.com",
             "password": "test"

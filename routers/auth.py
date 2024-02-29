@@ -17,7 +17,7 @@ from schemas.user import CreateUserRequest, Token, TokenData
 from models.user import User
 from utils.jwt import create_access_token, authenticate_user, get_user
 from constants.keys import SECRET_KEY, ALGORITHM
-from .logger import logger
+from routers.logger import logger
 from services.user import create_user
 
 router = APIRouter(prefix="/auth", tags=['auth'])
