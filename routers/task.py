@@ -8,7 +8,7 @@ from models.project import Project, UserProject
 from routers.auth import  get_scope_user
 from routers.logger import logger
 from datetime import datetime
-from schemas.task import TaskCreate, TaskStatusCreate, TaskDetail
+from schemas.task import TaskCreate, TaskStatusCreate, TaskDetail, TaskUpdate
 from database.session import get_db
 
 router = APIRouter(prefix="/tasks", tags=['tasks'])
@@ -265,5 +265,40 @@ def get_tasks_for_user(request: Request, user_id: int, db: Session = Depends(get
         if not status_name:
             logger.error(f"Task status with id {task.status_id} does not exist")
         task.status_name = status_name
+<<<<<<< HEAD
     logger.info(f"Tasks retrieved successfully")
     return templates.TemplateResponse("list_tasks.html", context={"request": request, "tasks":tasks, "user_id":user_id, "user": user})
+=======
+    logger.info(f"Tasks retrieved successfully for project with ID {project_id}")
+    return templates.TemplateResponse("list_tasks.html", context={"request": request, "tasks":tasks})
+
+
+@router.put("update/{task_id}")
+def update_task(task_id: int, task_update: TaskUpdate, db: Session = Depends(get_db)):
+    """
+    Update task details for the specified task ID.
+    """
+    db_task = db.query(Task).filter(Task.task_id == task_id).first()
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    for attr, value in task_update.dict(exclude_unset=True).items():
+        setattr(db_task, attr, value)
+
+    db.commit()
+    db.refresh(db_task)
+    return db_task
+
+
+@router.delete("delete/{task_id}")
+def delete_task(task_id: int, db: Session = Depends(get_db)):
+    """
+    Delete the task with the specified task ID.
+    """
+    db_task = db.query(Task).filter(Task.task_id == task_id).first()
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    db.delete(db_task)
+    db.commit()
+    return {"message": "Task deleted successfully"}
+>>>>>>> 30114f70db92e70ad14aed2b1968395c4810f601
