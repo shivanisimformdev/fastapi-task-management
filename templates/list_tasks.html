@@ -7,6 +7,7 @@
     <div class="btn-toolbar mb-2 mb-md-0">
     </div>
   </div>
+  <a href="url_for('render_task_template' user_id=user_id)">Add task</a>
   <table class="table" style="width: 1000px;">
       <thead>
         <tr>
@@ -25,8 +26,7 @@
           <td>{{ task.task_name }}</td>
           <td>{{ task.task_description }}</td>
           <td>{{ task.status_name }}</td>
-          <td><a href="{{ url_for('get_task_details', task_id=task.task_id) }}"><i class="bi bi-eye"></i></a></td>
-
+          <td><a href="{{ url_for('get_task_details', user_id=user_id, task_id=task.task_id) }}"><i class="bi bi-eye"></i></a></td>
         </tr>
         {% endfor %}
       </tbody>
