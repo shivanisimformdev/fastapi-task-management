@@ -8,7 +8,7 @@ from models.project import Project
 from routers.auth import  get_scope_user
 from routers.logger import logger
 from datetime import datetime
-from schemas.task import TaskCreate, TaskStatusCreate, TaskDetail
+from schemas.task import TaskCreate, TaskStatusCreate, TaskDetail, TaskUpdate
 from database.session import get_db
 
 router = APIRouter(prefix="/tasks", tags=['tasks'])
@@ -57,7 +57,7 @@ def render_task_template(request: Request, user_id: int, project_id: int):
 
 @router.post("/user_projects/{user_id}/projects/task/{project_id}/", response_class=HTMLResponse)
 def create_task(request: Request, user_id: int, project_id: int, task_name: str = Form(...), task_description: str = Form(...),
-        task_status: str = Form(...), db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
+        task_status: str = Form(...), db: Session = Depends(get_db)):
     """
         Creates a new task with the provided details.
 
@@ -106,10 +106,10 @@ def create_task(request: Request, user_id: int, project_id: int, task_name: str 
     db.refresh(new_task)
 
     logger.info("Task created successfully")
-    return templates.TemplateResponse("home.html", context={"request": request})
+    return templates.TemplateResponse("home.html", context={"request": request, "message":"Task created successfully"})
 
 @router.get("/tasks/{task_id}/", response_class=HTMLResponse)
-def get_task_details(request: Request, task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
+def get_task_details(request: Request, task_id: int, db: Session = Depends(get_db)):
     """
         Retrives task details for specific task.
 
@@ -240,7 +240,7 @@ def get_task_with_project_details(request: Request, task_id: int, db: Session = 
         logger.error(f"Task with ID {task_id} not found")
     return templates.TemplateResponse("task_detail.html", context={"request":request, "task_detail":task_project_details})
 
-@router.get("/tasks/user/", response_class=HTMLResponse)
+@router.get("/user/", response_class=HTMLResponse)
 def get_tasks_for_user(request: Request, current_user: User = Depends(get_scope_user)):
     """
         Retrieves all tasks of user.
@@ -267,3 +267,33 @@ def get_tasks_for_user(request: Request, current_user: User = Depends(get_scope_
         task.status_name = status_name
     logger.info(f"Tasks retrieved successfully for project with ID {project_id}")
     return templates.TemplateResponse("list_tasks.html", context={"request": request, "tasks":tasks})
+
+
+@router.put("update/{task_id}")
+def update_task(task_id: int, task_update: TaskUpdate, db: Session = Depends(get_db)):
+    """
+    Update task details for the specified task ID.
+    """
+    db_task = db.query(Task).filter(Task.task_id == task_id).first()
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    for attr, value in task_update.dict(exclude_unset=True).items():
+        setattr(db_task, attr, value)
+
+    db.commit()
+    db.refresh(db_task)
+    return db_task
+
+
+@router.delete("delete/{task_id}")
+def delete_task(task_id: int, db: Session = Depends(get_db)):
+    """
+    Delete the task with the specified task ID.
+    """
+    db_task = db.query(Task).filter(Task.task_id == task_id).first()
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    db.delete(db_task)
+    db.commit()
+    return {"message": "Task deleted successfully"}

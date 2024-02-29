@@ -31,3 +31,9 @@ class TaskDetail(BaseModel):
     project_name: str
     project_description: str
     status_name: str
+
+
+class TaskUpdate(BaseModel):
+    task_name: Optional[str]
+    task_description: Optional[str]
+    status_id: Optional[int]
