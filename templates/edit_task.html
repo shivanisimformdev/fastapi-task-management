@@ -51,8 +51,13 @@ editForm.addEventListener('submit', (event) => {
     catch(error) {
         console.error("There was a problem with the fetch operation:", error);
     };
-    const userid = "{{ user_id }}"
-    window.location.href = "/tasks/home/" + parseInt(userid) + "/";
+    let userid = parseInt("{{ user_id }}");
+    if (!isNaN(userid)) {
+        console.log("hete", userid, typeof userid);
+        window.location.href = "/tasks/home/" + userid ;
+    } else {
+        console.error("userid is not a valid integer:", userid);
+    }
 });
 </script>
 {% endblock javascript %}

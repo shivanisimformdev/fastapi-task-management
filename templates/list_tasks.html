@@ -1,6 +1,16 @@
 {% extends 'base.html' %}
 
 {% block main %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript">
+        $(document).ready(function(){
+            const token = localStorage.getItem("accessToken");
+            if (!token) {
+                alert("No token found, please log in first!");
+                window.location.href = "/users/login/";
+            }
+        });
+</script>
 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
   <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom" style="width: 1000px;">
     <h1 class="h2">Tasks</h1>

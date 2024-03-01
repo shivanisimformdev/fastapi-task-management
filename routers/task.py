@@ -341,7 +341,7 @@ def update_task(request: Request, user_id:int, task_id: int, task_name: str = Fo
     logger.info("Task updated successfully")
     return templates.TemplateResponse("list_tasks.html", context={"request": request, "message":"Task updated successfully", "user": user, "user_id": user_id})
 
-@router.get("/home/{user_id}/", response_class=HTMLResponse)
+@router.get("/home/{user_id}", response_class=HTMLResponse)
 def render_edit_success_template(request: Request, user_id: int, db: Session = Depends(get_db)):
     """
     Renders home page after successful edit operation.
