@@ -15,7 +15,7 @@ router = APIRouter(prefix="/projects", tags=['projects'])
 
 templates = Jinja2Templates(directory="templates")
 
-@router.get("/project/", response_class=HTMLResponse)
+@router.get("/project/", response_class=HTMLResponse, include_in_schema=False)
 def render_project_template(request: Request):
     """
         Renders add project template.
@@ -23,7 +23,7 @@ def render_project_template(request: Request):
     logger.info("Rendering add project template")
     return templates.TemplateResponse("project.html", {"request": request})
 
-@router.post("/projects/", response_class=HTMLResponse)
+@router.post("/projects/", response_class=HTMLResponse, include_in_schema=False)
 def create_project(request: Request, project_name: str = Form(...), project_description: str = Form(...),  db: Session = Depends(get_db)):
     """
         Creates a new project with the provided details.
@@ -46,7 +46,7 @@ def create_project(request: Request, project_name: str = Form(...), project_desc
     return templates.TemplateResponse("home.html", context={"request":request, "message":"Project created successfully"})
 
 
-@router.get("/projects/user/{user_id}/", response_class=HTMLResponse)
+@router.get("/projects/user/{user_id}/", response_class=HTMLResponse, include_in_schema=False)
 def get_projects_created_by_user(request: Request, user_id: int, db: Session = Depends(get_db), current_user:User=Depends(get_scope_user)):
     """
         Retrieves all projects created by the user with the specified user ID.
@@ -75,7 +75,7 @@ def get_projects_created_by_user(request: Request, user_id: int, db: Session = D
     logger.info("Projects retrieved successfully")
     return templates.TemplateResponse("list_projects.html", {"request": request, "projects":projects})
 
-@router.get("/user/project/{user_id}/", response_class=HTMLResponse)
+@router.get("/user/project/{user_id}/", response_class=HTMLResponse, include_in_schema=False)
 def render_assign_project_template(request: Request, user_id: int, db: Session = Depends(get_db), current_user:User = Depends(get_scope_user)):
     """
         Renders template for project assignment.
@@ -103,7 +103,7 @@ def render_assign_project_template(request: Request, user_id: int, db: Session =
     return templates.TemplateResponse("assign_project.html", context={"request":request, "projects":projects, "user_id": user_id})
 
 
-@router.post("/user_projects/{user_id}/", response_class=HTMLResponse)
+@router.post("/user_projects/{user_id}/", response_class=HTMLResponse, include_in_schema=False)
 def create_user_project(request: Request, user_id: int, project_id: int = Form(...), db: Session = Depends(get_db), current_user:User=Depends(get_scope_user)):
     """
     Creates a new user project relationship.
@@ -146,7 +146,7 @@ def create_user_project(request: Request, user_id: int, project_id: int = Form(.
     logger.info("User project relationship created successfully")
     return templates.TemplateResponse("home.html", context={"request":request, "message":"Project assigned successfully"})
 
-@router.get("/user_projects/{user_id}/projects/", response_class=HTMLResponse)
+@router.get("/user_projects/{user_id}/projects/", response_class=HTMLResponse, include_in_schema=False)
 def get_user_projects(request: Request, user_id: int, db: Session = Depends(get_db), current_user:User=Depends(get_scope_user)):
     """
         Retrieves projects associated with a specific user.
