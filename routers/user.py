@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status, APIRouter, Form, Request
+from fastapi import Depends, HTTPException, status, APIRouter, Form, Request, Security
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -41,8 +41,8 @@ def get_user_by_email_and_password(email: str, password: str, db: Session):
         raise HTTPException(status_code=404, detail="User not found or invalid credentials")
     return user
 
-@router.get("/home/", response_class=HTMLResponse)
-def home(request: Request):
+@router.get("/home/")
+def home(request: Request, current_user: User = Security(get_scope_user)):
     """
     Renders home page template response.
 
@@ -50,7 +50,7 @@ def home(request: Request):
         Home page template response
     """
     logger.info("Rendering home page template")
-    return templates.TemplateResponse(name="home.html", context={"request":request})
+    return templates.TemplateResponse(name="home.html", context={"request":request, "user": current_user})
 
 @router.get("/register/", response_class=HTMLResponse)
 def render_register_template(request: Request):
@@ -66,7 +66,7 @@ def render_register_template(request: Request):
 
 
 @router.post("/register/", response_class=HTMLResponse)
-def register_user(request: Request, username: str = Form(...), password: str = Form(...), email: str = Form(...), is_admin_user: bool= Form(False),
+def register_user(request: Request, username: str = Form(...), password: str = Form(...), email: str = Form(...), is_admin_user: str= Form(False),
     db: Session = Depends(get_db)):
     """
     Creates a new user with the provided user details in the database.
@@ -139,7 +139,7 @@ def get_users(request: Request, db: Session = Depends(get_db)):
     """
     users = db.query(User).all()
     logger.info("Rendering user list template response")
-    return templates.TemplateResponse("list_users.html", {"request": request, "users":users})
+    return templates.TemplateResponse("list_users.html", {"request": request, "users":users, "user": user})
 
 @router.post("/user/details/{user_id}/", response_class=HTMLResponse)
 def create_user_details(request: Request, user_id: int, user_role_id: str = Form(...), user_technology_id: str = Form(...), db: Session = Depends(get_db)):

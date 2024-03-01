@@ -11,14 +11,14 @@ from database.session import SessionLocal
 from routers.logger import logger
 
 
-def create_user(username: str, password: str, email: str, is_admin_user: bool = False, db: Session = None):
+def create_user(username: str, password: str, email: str, is_admin_user: str, db: Session = None):
     """
     Creates a new user with the provided user details in the database.
     """
     if db is None:
         db = SessionLocal()
 
-    db_user = User(username=username, email=email, is_admin_user=is_admin_user)
+    db_user = User(username=username, email=email, is_admin_user=True if is_admin_user == "Yes" else False)
     db_user.password_hash = hash_password(password)  # You would need to implement hash_password function
     db.add(db_user)
     db.commit()

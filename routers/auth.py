@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, Form, Header
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from typing_extensions import Annotated
@@ -60,9 +60,11 @@ def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depen
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could Not Validate User.")
     token = create_access_token(username=user.username, user_id=user.id, expire_delta=timedelta(minutes=20), scope=["admin"] if user.is_admin_user else ["user"])
+
     return {
         'access_token': token,
-        'token_type': 'bearer'
+        'token_type': 'bearer',
+        'user_id':user.id
     }
 
 
@@ -78,9 +80,19 @@ def get_current_user(token: str = Depends(oauth2_bearer)):
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user.")
 
+def get_token(token: str = Header(...)):
+    try:
+        token = token[6:]
+        return token
+    except Exception as ex:
+        logger.exception("Invalid token entered {0}".format(ex.args))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token should be of the format -- {Bearer <token>}",
+        )
 
 def get_scope_user(
-        security_scopes: SecurityScopes, token: Annotated[str, Depends(oauth2_bearer)], db: User = Depends(get_db)
+        security_scopes: SecurityScopes, token: Annotated[str, Depends(get_token)], db: User = Depends(get_db)
 ):
     if security_scopes.scopes:
         authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
