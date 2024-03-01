@@ -9,7 +9,6 @@ fake = Faker()
 def create_project(client, access_token_fixture):
     access_token = access_token_fixture
     user_data = create_user(client)
-    breakpoint()
     response = client.post(
         "/projects/projects/", json={
             "project_name": fake.company(),  # Generate a random company name as the project name
@@ -21,17 +20,6 @@ def create_project(client, access_token_fixture):
     data = response.json()
     return data
 
-
-# def test_create_project(client, access_token_fixture):
-#     access_token = access_token_fixture
-#     user_data = create_user(client)
-#     data = create_project(client, access_token)
-#     assert "project_description" in data
-#     assert "project_name" in data
-#     assert "updated_at" in data
-#     assert "created_at" in data
-#     assert "project_id" in data
-#     assert data["created_by_id"] == user_data["id"]
 
 
 def test_create_project(client, access_token_fixture):

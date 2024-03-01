@@ -58,7 +58,7 @@ def render_task_template(request: Request, user_id: int, db: Session = Depends(g
 
 @router.post("/task/{user_id}/", response_class=HTMLResponse)
 def create_task(request: Request, user_id: int, task_name: str = Form(...), task_description: str = Form(...),
-        task_status: str = Form(...), db: Session = Depends(get_db)):
+        task_status: str = Form(...), db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
     """
         Creates a new task with the provided details.
 
@@ -77,6 +77,10 @@ def create_task(request: Request, user_id: int, task_name: str = Form(...), task
             HTTPException: If project, user, or status not found.
 
     """
+    if current_user != user_id:
+        logger.error(
+            f"User {current_user.username} attempted to create task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
     logger.info("Creating a new task")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -113,7 +117,7 @@ def create_task(request: Request, user_id: int, task_name: str = Form(...), task
     return templates.TemplateResponse("home.html", context={"request": request, "message":"Task created successfully", "user": user, "user_id":user_id})
 
 @router.get("/details/{user_id}/{task_id}/", response_class=HTMLResponse)
-def get_task_details(request: Request, user_id: int, task_id: int, db: Session = Depends(get_db)):
+def get_task_details(request: Request, user_id: int, task_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
     """
         Retrives task details for specific task.
 
@@ -129,6 +133,10 @@ def get_task_details(request: Request, user_id: int, task_id: int, db: Session =
             HTTPException: If task with the specified id does not exist.
 
     """
+    if current_user.id != user_id:
+        logger.error(
+            f"User {current_user.username} attempted to create task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
     logger.info(f"Retrieving details for task with ID {task_id}")
     task = db.query(Task).filter(Task.task_id == task_id).first()
     if not task:
@@ -150,7 +158,7 @@ def get_task_details(request: Request, user_id: int, task_id: int, db: Session =
     return templates.TemplateResponse("task_detail.html", context={"request":request, "task_detail":task_detail, "user_id": user_id, "user": user})
 
 @router.get("/user/projects/{user_id}/projects/tasks/{project_id}/", response_class=HTMLResponse)
-def get_tasks_for_project(request: Request, user_id: int, project_id: int, db: Session = Depends(get_db)):
+def get_tasks_for_project(request: Request, user_id: int, project_id: int, db: Session = Depends(get_db),current_user: User = Depends(get_scope_user) ):
     """
         Retrieves all tasks associated with a specific user and project.
 
@@ -165,6 +173,10 @@ def get_tasks_for_project(request: Request, user_id: int, project_id: int, db: S
             HTTPException: If the project or user with the specified ID is not found.
 
     """
+    if current_user.id != user_id:
+        logger.error(
+            f"User {current_user.username} attempted to create task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
     logger.info(f"Retrieving tasks for project with ID {project_id}")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -246,7 +258,7 @@ def get_task_with_project_details(request: Request, task_id: int, db: Session = 
     return templates.TemplateResponse("task_detail.html", context={"request":request, "task_detail":task_project_details})
 
 @router.get("/user/{user_id}/", response_class=HTMLResponse)
-def get_tasks_for_user(request: Request, user_id: int, db: Session = Depends(get_db)):
+def get_tasks_for_user(request: Request, user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
     """
         Retrieves all tasks of user.
 
@@ -260,6 +272,10 @@ def get_tasks_for_user(request: Request, user_id: int, db: Session = Depends(get
         Raises:
             HTTPException: If user not found.
     """
+    if current_user.id != user_id:
+        logger.error(
+            f"User {current_user.username} attempted to create task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
     logger.info(f"Retrieving tasks for user with ID {user_id}")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -282,14 +298,21 @@ def get_tasks_for_user(request: Request, user_id: int, db: Session = Depends(get
     return templates.TemplateResponse("list_tasks.html", context={"request": request, "tasks":tasks, "user_id":user_id, "user": user})
 
 @router.get("/{user_id}/{task_id}/", response_class=HTMLResponse)
-def render_task_update_template(request: Request, user_id: int, task_id:int, db: Session = Depends(get_db)):
+def render_task_update_template(request: Request, user_id: int, task_id:int, db: Session = Depends(get_db), current_user: User = Depends(get_scope_user)):
     """
         Renders template for updating task for specific user.
 
         Args:
             user_id(int): ID of the user to create task for.
     """
+    if current_user.id != user_id:
+        logger.error(
+            f"User {current_user.username} attempted to create task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
     task = db.query(Task).filter(Task.task_id == task_id).first()
+    if not task:
+        logger.warning(f"Task with ID {task_id} not found")
+        return None
     task_status = db.query(TaskStatus.task_status_name).filter(TaskStatus.task_status_id == task.status_id).scalar()
     user = db.query(User).filter(User.id == user_id).first()
     logger.info("Rendering template for updating task")
@@ -298,7 +321,7 @@ def render_task_update_template(request: Request, user_id: int, task_id:int, db:
 
 @router.put("/{user_id}/{task_id}/", response_class=HTMLResponse)
 def update_task(request: Request, user_id:int, task_id: int, task_name: str = Form(...), task_description: str = Form(...),
-        task_status: str = Form(...), db: Session = Depends(get_db)):
+        task_status: str = Form(...), db: Session = Depends(get_db), current_user:User = Depends(get_scope_user)):
     """
         Updates task with the provided details.
 
@@ -317,6 +340,10 @@ def update_task(request: Request, user_id:int, task_id: int, task_name: str = Fo
             HTTPException: If task or user not found.
 
     """
+    if current_user.id != user_id:
+        logger.error(
+            f"User {current_user.username} attempted to create task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
     logger.info(f"Updating a task with ID : {task_id}")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -343,7 +370,7 @@ def update_task(request: Request, user_id:int, task_id: int, task_name: str = Fo
     return templates.TemplateResponse("list_tasks.html", context={"request": request, "message":"Task updated successfully", "user": user, "user_id": user_id})
 
 @router.get("/home/{user_id}/", response_class=HTMLResponse)
-def render_edit_success_template(request: Request, user_id: int, db: Session = Depends(get_db)):
+def render_edit_success_template(request: Request, user_id: int, db: Session = Depends(get_db), current_user:User = Depends(get_scope_user)):
     """
     Renders home page after successful edit operation.
 
@@ -356,6 +383,10 @@ def render_edit_success_template(request: Request, user_id: int, db: Session = D
     Raises:
         HTTPException: If user not found.
     """
+    if current_user.id != user_id:
+        logger.error(
+            f"User {current_user.username} attempted to create task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         logger.error(f"User with ID {user_id} not found")
@@ -364,7 +395,7 @@ def render_edit_success_template(request: Request, user_id: int, db: Session = D
     return templates.TemplateResponse("home.html", context={"request":request, "message":"Task updated successfully", "user": user, "user_id": user_id})
 
 @router.get("/delete/{user_id}/{task_id}/", response_class=HTMLResponse)
-def delete_task(request: Request, user_id: int, task_id: int, db: Session = Depends(get_db)):
+def delete_task(request: Request, user_id: int, task_id: int, db: Session = Depends(get_db), current_user:User = Depends(get_scope_user)):
     """
     Delete the task with the specified task ID.
 
@@ -379,6 +410,10 @@ def delete_task(request: Request, user_id: int, task_id: int, db: Session = Depe
     Raises:
         HTTPException: If task or user not found.
     """
+    if current_user.id != user_id:
+        logger.error(
+            f"User {current_user.username} attempted to create task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
     logger.info(f"Deleting a task with ID : {task_id}")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:

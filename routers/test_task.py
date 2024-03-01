@@ -22,19 +22,6 @@ def test_create_task_status(client):
     assert data["task_status_name"] == task_status_name
 
 
-# def test_create_task_status(client):
-#     task_status_data = {
-#         "task_status_name": fake.word(),
-#     }
-#     response = client.post("/tasks/task_statuses/", json=task_status_data)
-#     print(response.text)
-#     assert response.status_code == 200
-#     data = response.json()
-#     print(data, '=======================================')
-#     assert "task_status_id" in data
-#     assert data["task_status_name"] == task_status_data["task_status_name"]
-
-
 fake = Faker()
 
 
@@ -49,8 +36,8 @@ def test_create_task(client, access_token_fixture):
     # Generate fake task data
     task_data = {
         "project_id": project_data['project_id'],
-        "task_name": fake.sentence(),  # Generate a random sentence as the task name
-        "task_description": fake.paragraph(),  # Generate a random paragraph as the task description
+        "task_name": fake.sentence(),
+        "task_description": fake.paragraph(),
         "task_owner_id": user_data['id'],
         "task_status_id": task_status_data['task_status_id']
     }
