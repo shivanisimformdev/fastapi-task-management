@@ -21,7 +21,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 Base.metadata.create_all(bind=engine)
 
-@app.get("/")
+@app.get("/",include_in_schema=False)
 def landing_page(request: Request):
     return templates.TemplateResponse("login.html", context={"request": request})
 

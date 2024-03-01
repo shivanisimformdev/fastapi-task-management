@@ -151,8 +151,8 @@ def get_task_details(request: Request, user_id: int, task_id: int, db: Session =
     logger.info(f"Retrieving details for task with ID {task_id}")
     task = db.query(Task).filter(Task.task_id == task_id, Task.task_owner_id == user_id).first()
     if not task:
-        logger.error(f"Task with ID {task_id} not found for user with ID {current_user.id}")
-        raise HTTPException(status_code=404, detail="Task not found for the current user logged in")
+        logger.error(f"Task with ID {task_id} not found for user with ID {user.id}")
+        raise HTTPException(status_code=404, detail="Task not found for the curruent user logged in")
 
     status_name = db.query(TaskStatus.task_status_name).filter(TaskStatus.task_status_id == task.status_id).scalar()
     project = db.query(Project.project_name, Project.project_description).filter(Project.project_id == task.project_id).first()
@@ -371,7 +371,7 @@ def update_task(request: Request, user_id:int, task_id: int, task_name: str = Fo
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     db_task = db.query(Task).filter(Task.task_id == task_id, Task.task_owner_id == user_id).first()
     if not db_task:
-        logger.error(f"Task with ID {task_id} not found for user with ID {current_user.id}")
+        logger.error(f"Task with ID {task_id} not found for user with ID {user.id}")
         raise HTTPException(status_code=404, detail="Task not found for the current user logged in")
 
     task_status = TaskStatus(task_status_name=task_status)
@@ -418,7 +418,7 @@ def render_edit_success_template(request: Request, user_id: int, db: Session = D
     logger.info(f"Rendering template for home page")
     return templates.TemplateResponse("home.html", context={"request":request, "message":"Task updated successfully", "user": user, "user_id": user_id})
 
-@router.get("/delete/{user_id}/{task_id}/")
+@router.delete("/delete/{user_id}/{task_id}/")
 def delete_task(request: Request, user_id: int, task_id: int, db: Session = Depends(get_db), user_data:User = Security(get_scope_user)):
     """
     Delete the task with the specified task ID.
@@ -447,7 +447,7 @@ def delete_task(request: Request, user_id: int, task_id: int, db: Session = Depe
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     db_task = db.query(Task).filter(Task.task_id == task_id, Task.task_owner_id == user_id).first()
     if not db_task:
-        logger.error(f"Task with ID {task_id} not found for user with ID {current_user.id}")
+        logger.error(f"Task with ID {task_id} not found for user with ID {user.id}")
         raise HTTPException(status_code=404, detail="Task not found for the current user logged in")
     db.delete(db_task)
     db.commit()

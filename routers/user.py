@@ -129,8 +129,8 @@ def login_user(request: Request, email: str =  Form(...),password: str = Form(..
     user = get_user_by_email_and_password(email, password, db)
     return templates.TemplateResponse("home.html", {"request": request, "username": user.username, "message": "User Logged in successfully"})
 
-@router.get("/users/", response_class=HTMLResponse)
-def get_users(request: Request, db: Session = Depends(get_db), include_in_schema=False):
+@router.get("/users/", response_class=HTMLResponse, include_in_schema=False)
+def get_users(request: Request, db: Session = Depends(get_db)):
     """
     Retrieves list of all users.
 
