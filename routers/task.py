@@ -138,10 +138,11 @@ def get_task_details(request: Request, user_id: int, task_id: int, db: Session =
             f"User {current_user.username} attempted to create task for user ID {user_id}")
         raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
     logger.info(f"Retrieving details for task with ID {task_id}")
-    task = db.query(Task).filter(Task.task_id == task_id).first()
+    task = db.query(Task).filter(Task.task_id == task_id, Task.task_owner_id == user_id).first()
     if not task:
-        logger.error(f"Task with ID {task_id} not found")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        logger.error(f"Task with ID {task_id} not found for user with ID {current_user.id}")
+        raise HTTPException(status_code=404, detail="Task not found for the current user logged in")
+
     status_name = db.query(TaskStatus.task_status_name).filter(TaskStatus.task_status_id == task.status_id).scalar()
     project = db.query(Project.project_name, Project.project_description).filter(Project.project_id == task.project_id).first()
 
@@ -175,8 +176,8 @@ def get_tasks_for_project(request: Request, user_id: int, project_id: int, db: S
     """
     if current_user.id != user_id:
         logger.error(
-            f"User {current_user.username} attempted to create task for user ID {user_id}")
-        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
+            f"User {current_user.username} attempted to gt task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only get tasks for your own user ID")
     logger.info(f"Retrieving tasks for project with ID {project_id}")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -274,8 +275,8 @@ def get_tasks_for_user(request: Request, user_id: int, db: Session = Depends(get
     """
     if current_user.id != user_id:
         logger.error(
-            f"User {current_user.username} attempted to create task for user ID {user_id}")
-        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
+            f"User {current_user.username} attempted to get task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only get tasks for your own user ID")
     logger.info(f"Retrieving tasks for user with ID {user_id}")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -307,8 +308,8 @@ def render_task_update_template(request: Request, user_id: int, task_id:int, db:
     """
     if current_user.id != user_id:
         logger.error(
-            f"User {current_user.username} attempted to create task for user ID {user_id}")
-        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
+            f"User {current_user.username} attempted to update task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only update tasks for your own user ID")
     task = db.query(Task).filter(Task.task_id == task_id).first()
     if not task:
         logger.warning(f"Task with ID {task_id} not found")
@@ -342,16 +343,17 @@ def update_task(request: Request, user_id:int, task_id: int, task_name: str = Fo
     """
     if current_user.id != user_id:
         logger.error(
-            f"User {current_user.username} attempted to create task for user ID {user_id}")
-        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
+            f"User {current_user.username} attempted to update task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only update tasks for your own user ID")
     logger.info(f"Updating a task with ID : {task_id}")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         logger.error(f"User with ID {user_id} not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    db_task = db.query(Task).filter(Task.task_id == task_id).first()
+    db_task = db.query(Task).filter(Task.task_id == task_id, Task.task_owner_id == user_id).first()
     if not db_task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        logger.error(f"Task with ID {task_id} not found for user with ID {current_user.id}")
+        raise HTTPException(status_code=404, detail="Task not found for the current user logged in")
 
     task_status = TaskStatus(task_status_name=task_status)
     db.add(task_status)
@@ -385,8 +387,8 @@ def render_edit_success_template(request: Request, user_id: int, db: Session = D
     """
     if current_user.id != user_id:
         logger.error(
-            f"User {current_user.username} attempted to create task for user ID {user_id}")
-        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
+            f"User {current_user.username} attempted to update task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only update tasks for your own user ID")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         logger.error(f"User with ID {user_id} not found")
@@ -412,16 +414,17 @@ def delete_task(request: Request, user_id: int, task_id: int, db: Session = Depe
     """
     if current_user.id != user_id:
         logger.error(
-            f"User {current_user.username} attempted to create task for user ID {user_id}")
-        raise HTTPException(status_code=403, detail="Forbidden: You can only create tasks for your own user ID")
+            f"User {current_user.username} attempted to delete task for user ID {user_id}")
+        raise HTTPException(status_code=403, detail="Forbidden: You can only delete tasks for your own user ID")
     logger.info(f"Deleting a task with ID : {task_id}")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         logger.error(f"User with ID {user_id} not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    db_task = db.query(Task).filter(Task.task_id == task_id).first()
+    db_task = db.query(Task).filter(Task.task_id == task_id, Task.task_owner_id == user_id).first()
     if not db_task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        logger.error(f"Task with ID {task_id} not found for user with ID {current_user.id}")
+        raise HTTPException(status_code=404, detail="Task not found for the current user logged in")
     db.delete(db_task)
     db.commit()
     return templates.TemplateResponse("home.html", context={"request": request, "message":"Task deleted successfully", "user": user, "user_id": user_id})
