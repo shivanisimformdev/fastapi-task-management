@@ -268,14 +268,15 @@ def get_tasks_for_user(request: Request, user_id: int, db: Session = Depends(get
     project_ids = [project_id for project_id, in user_project_ids]
     projects = db.query(Project).filter(Project.project_id.in_(project_ids)).all()
     # tasks_list = []
+    tasks = []
     for project in projects:
         tasks = project.tasks
         # tasks_list.append(tasks)
-    for task in tasks:
-        status_name = db.query(TaskStatus.task_status_name).filter(TaskStatus.task_status_id == task.status_id).scalar()
-        if not status_name:
-            logger.error(f"Task status with id {task.status_id} does not exist")
-        task.status_name = status_name
+        for task in tasks:
+            status_name = db.query(TaskStatus.task_status_name).filter(TaskStatus.task_status_id == task.status_id).scalar()
+            if not status_name:
+                logger.error(f"Task status with id {task.status_id} does not exist")
+            task.status_name = status_name
     logger.info(f"Tasks retrieved successfully for user with ID {user_id}")
     return templates.TemplateResponse("list_tasks.html", context={"request": request, "tasks":tasks, "user_id":user_id, "user": user})
 
