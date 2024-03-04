@@ -80,19 +80,6 @@ def register_user(request: Request, username: str = Form(...), password: str = F
     Returns:
         Login template response.
     """
-    # TODO this code is same as in user.py. If we don't need to use this API, remove this code.
-    # create_user_model = User(
-    #     username=create_user_request.username,
-    #     email=create_user_request.email,
-    #     password_hash=bcrypt_context.hash(create_user_request.password_hash)
-    # )
-    # db.add(create_user_model)
-    # db.commit()
-    # db.refresh(create_user_model)
-    # return {
-    #     "email": create_user_model.email,
-    #     "username": create_user_model.username
-    # }
     user = db.query(User).filter(or_(User.username == username, User.email == email)).first()
     if user:
         logger.error(f"User with the provided details already exists {username} {email}")

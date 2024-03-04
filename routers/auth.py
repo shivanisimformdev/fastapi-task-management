@@ -30,30 +30,6 @@ oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token",
                                      scopes={"admin": "Admin access", "user": "Authenticated user access"})
 
 
-#TODO below APIs are using async, is it required?
-#TODO this code is same as in user.py. If we don't need to use this API, remove this code.
-# @router.post("/register/", response_class=HTMLResponse)
-# def register_user(request: Request, username: str = Form(...), password: str = Form(...), email: str = Form(...), db: Session = Depends(get_db)):
-#     # create_user_model = User(
-#     #     username=create_user_request.username,
-#     #     email=create_user_request.email,
-#     #     password_hash=bcrypt_context.hash(create_user_request.password_hash)
-#     # )
-#     # db.add(create_user_model)
-#     # db.commit()
-#     # db.refresh(create_user_model)
-#     # return {
-#     #     "email": create_user_model.email,
-#     #     "username": create_user_model.username
-#     # }
-#     user = db.query(User).filter(or_(User.username == username, User.email == email)).first()
-#     # if user:
-#     #     return templates.TemplateResponse("register.html", {"request": request, "username": user.username, "message":"User already exist"})
-#     logger.info("Creating a new user with username: %s and email: %s", username, email)
-#     user = create_user(username, password, email, db)
-#     return templates.TemplateResponse("login.html", {"request": request, "username": user.username, "message":"User registered succsessfully"})
-
-
 @router.post("/token", response_model=Token)
 def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(get_db)):
     user = authenticate_user(form_data.username, form_data.password, db)
@@ -111,7 +87,6 @@ def get_scope_user(
         token_scopes = payload.get("scope", [])
         token_data = TokenData(scopes=token_scopes, username=username)
     except (JWTError, ValidationError) as ex:
-        print("dfsdfsdfsfdsfds", ex)
         raise credentials_exception
     user = get_user(db=db, username=token_data.username)
     if user is None:
